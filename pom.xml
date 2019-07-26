@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.shikhir</groupId>
+	<artifactId>Lsh4Text</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+
+	<name>Lsh4Text</name>
+	<description>This is a simplified implementation for Locality sensitive hashing(LSH) for text documents</description>
+	<url>https://github.com/shikhirsingh</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+    <developers>
+        <developer>
+            <name>Shikhir Singh - shikhir.com </name>
+        </developer>
+    </developers>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+    <scm>
+        <url>https://github.com/shikhirsingh/Lsh4Text</url>
+        <connection>
+            scm:git:git://github.com/mautini/Lsh4Text.git
+        </connection>
+        <developerConnection>
+            scm:git:ssh://git@github.com:mautini/Lsh4Text.git
+        </developerConnection>
+    </scm>
+	<dependencies>
+		<dependency>
+			<groupId>info.debatty</groupId>
+			<artifactId>java-lsh</artifactId>
+			<version>0.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.opennlp</groupId>
+			<artifactId>opennlp-tools</artifactId>
+			<version>1.9.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>me.lemire.integercompression</groupId>
+			<artifactId>JavaFastPFOR</artifactId>
+			<version>0.1.12</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

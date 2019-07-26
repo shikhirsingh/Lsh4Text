@@ -23,6 +23,17 @@ Maven:
 // Coming soon!
 ```
 
+**How LSH Works**
+
+LSH belongs to a class of probabilistic algorithms. In it's simplest form, LSH works by grouping all of your documents (or document signature) into buckets. The same document (signature) likely exists in multiple buckets for fast lookup. When you are looking for a document that could be similar, you check check the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one. You only need to search the buckets which significantly reduces the size and dimension of the problem.
+
+**Parameters to consider**
+There are a number of parameters that go into a text LSH algorithm. In this implementation of LSH, some of these are auto computed for you. You will want to try different numbers based on your dataset. I encourage you to try different numbers. 
+
+* Bucket Size
+* Vector Size
+* kGram
+
 **Get me started**
 
 * First, you will need to create a forest which contains shinglings (i.e. words) of all your documents. Do do this, you can either load a file containing the document or add a document one by one. Here is how you load of file to create an untrimmed forest. 

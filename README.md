@@ -3,11 +3,11 @@
 This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to
 find similar documents without scanning each documents one by one to determine if they are similar.
 
-** Version History **
+**Version History**
 
 * 1.0 - Initial Release
 
-** Author **
+**Author**
 
 * Shikhir Singh
 
@@ -15,7 +15,7 @@ find similar documents without scanning each documents one by one to determine i
 
 * Java 8+ 
 
-** How to Install **
+**How to Install**
 
 Maven:
 
@@ -23,7 +23,7 @@ Maven:
 // Coming soon!
 ```
 
-** Get me started **
+**Get me started**
 
 * First, you will need to create a forest which contains shinglings (i.e. words) of all your documents. Do do this, you can either load a file containing the document or add a document one by one. Here is how you load of file to create an untrimmed forest. 
 

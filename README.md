@@ -25,14 +25,15 @@ Maven:
 
 **How LSH Works**
 
-LSH belongs to a class of probabilistic algorithms. In it's simplest form, LSH works by grouping all of your documents (or document signature) into buckets. The same document (signature) likely exists in multiple buckets for fast lookup. When you are looking for a document that could be similar, you check check the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one. You only need to search the buckets which significantly reduces the size and dimension of the problem.
+LSH belongs to a class of probabilistic algorithms. In it's simplest form, LSH works by grouping all of your documents (or the document's signature) into n buckets. Each document (or it's signature) needs to be stored in multiple buckets. When you are looking for a document that could be similar, you check each of the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one, just the buckets. Because you only need to search a small number of buckets, it can significantly reduces the size and dimension of the problem. For a more detailed explanation please see [this chapter](http://infolab.stanford.edu/~ullman/mmds/ch3a.pdf) from [Mining Massive Datasets](http://infolab.stanford.edu/~ullman/mmds.html) book. Another explanation is provided in [this blog](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4). 
 
 **Parameters to consider**
 There are a number of parameters that go into a text LSH algorithm. In this implementation of LSH, some of these are auto computed for you. You will want to try different numbers based on your dataset. I encourage you to try different numbers. 
 
 * Bucket Size
-* Vector Size
-* kGram
+* Number of Buckets for each document (Bands)
+* Vector Size - Number of unique kgrams 
+* kGram size - the minimum and maximum number of k-grams
 
 **Get me started**
 
@@ -45,7 +46,7 @@ There are a number of parameters that go into a text LSH algorithm. In this impl
 		fail("could not find test file");
 	}
 ```
-This command above creates an untrimmed forest from a file. The loadFile assumes that each line of the file is it's own document. 
+This command above creates an untrimmed forest from a file. The loadFile assumes that each line of the text file is it's own document. 
 
 You can also load the documents one by one 
 

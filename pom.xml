@@ -18,24 +18,24 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-    <developers>
-        <developer>
-            <name>Shikhir Singh - shikhir.com </name>
-        </developer>
-    </developers>
-	
+	<developers>
+		<developer>
+			<name>Shikhir Singh - shikhir.com </name>
+		</developer>
+	</developers>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-    <scm>
-        <url>https://github.com/shikhirsingh/Lsh4Text</url>
-        <connection>
+	<scm>
+		<url>https://github.com/shikhirsingh/Lsh4Text</url>
+		<connection>
             scm:git:git://github.com/mautini/Lsh4Text.git
         </connection>
-        <developerConnection>
+		<developerConnection>
             scm:git:ssh://git@github.com:mautini/Lsh4Text.git
         </developerConnection>
-    </scm>
+	</scm>
 	<dependencies>
 		<dependency>
 			<groupId>info.debatty</groupId>
@@ -73,4 +73,91 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>9</version>
+	</parent>
+	<issueManagement>
+		<system>GitHub Issue Tracking</system>
+		<url>https://github.com/shikhirsingh/Lsh4Text/issues</url>
+	</issueManagement>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+	<profiles>
+		<profile>
+			<id>java8-doclint-disabled</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+			<properties>
+				<javadoc.opts>-Xdoclint:none</javadoc.opts>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.8</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

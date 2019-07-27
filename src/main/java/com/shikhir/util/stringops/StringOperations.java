@@ -36,9 +36,8 @@ public class StringOperations {
 	 *   
 	 * @param strTest The string that needs tested for CJKV
 	 * @return the count of CJKV characters in string
-	 * @since 0.4.0
+	 * @since 1.0.0
 	 */
-
 	public static int countCJKCharecters(String strTest) {
 		final int length = strTest.length();
 		int counter=0;

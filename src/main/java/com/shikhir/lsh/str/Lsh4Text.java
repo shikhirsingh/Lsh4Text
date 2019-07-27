@@ -95,6 +95,8 @@ public class Lsh4Text {
 
 	/**
 	 * compresses encodes the entire Forest as base64 for easy storage.
+	 * 
+	 * @return returns an base64 encoded value of forest
 	 */
 	public static String encodeForestAsBase64() {
 
@@ -392,8 +394,8 @@ public class Lsh4Text {
 	/**
 	 * Sets the default k-grams used to build forest and find bucket
 	 * 
-	 * @param kGramsMin The minimum number of k-Grams used
-	 * @param kGramsMax The maximum number of k-Grams used
+	 * @param kGramsMinSize The minimum number of k-Grams used
+	 * @param kGramsMaxSize The maximum number of k-Grams used
 	 */
 	public static void setKgrams(int kGramsMinSize, int kGramsMaxSize) {
 		minKgram = kGramsMinSize;
@@ -409,7 +411,6 @@ public class Lsh4Text {
 	 * @param kGramsMax The maximum number of k-Grams used
 	 * @return The size of the forest
 	 */
-
 	public static int loadFile(String fileName, String encoding, int kGramsMin, int kGramsMax) throws IOException {
 		setKgrams(kGramsMin, kGramsMax);
 		return loadFile(fileName, encoding);

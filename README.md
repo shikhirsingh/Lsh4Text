@@ -1,7 +1,6 @@
 # Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm
 
-This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to
-find similar documents without scanning each documents one by one to determine if they are similar.
+This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to find similar documents without scanning each documents one by one to determine if they are similar.
 
 **Version History**
 
@@ -20,7 +19,11 @@ find similar documents without scanning each documents one by one to determine i
 Maven:
 
 ```
-// Coming soon!
+<dependency>
+  <groupId>com.shikhir</groupId>
+  <artifactId>Lsh4Text</artifactId>
+  <version>1.0.0</version>
+</dependency>
 ```
 
 **How LSH Works**
@@ -33,7 +36,7 @@ There are a number of parameters that go into a text LSH algorithm. In this impl
 * Bucket Size
 * Number of Buckets for each document (Bands)
 * Vector Size - Number of unique kgrams 
-* kGram size - the minimum and maximum number of k-grams
+* K-Shingles or kGram size - the minimum and maximum number of k-grams
 
 **Get me started**
 

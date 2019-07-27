@@ -45,6 +45,11 @@ public class Lsh4Text {
 		return single_instance;
 	}
 
+	
+	private static String removeStopChar(String text) {
+		return text.replaceAll("[.,:*;!()]", "").replaceAll("s+"," ");
+	}
+	
 	/**
 	 * The a bucket size is automatically estimated if not provided in the
 	 * getBuckets() function. This function estimates a bucket size.
@@ -71,6 +76,18 @@ public class Lsh4Text {
 		return iArr;
 	}
 
+	/**
+	 * Returns the Jaccard Similarity of the vectors
+	 * 
+	 * @param vector1 The document which needs to be analyzed
+	 * @param vector2   determines the number of possible buckets
+	 * @return Jaccard Similarity of the vectors.
+	 */
+	public static double jaccardSimilarity4Vectors(boolean[] vector1, boolean[] vector2) {
+        return MinHash.jaccardIndex(vector1, vector2);
+	}
+	
+	
 	/**
 	 * decompresses, decodes and loads a forest from base64 encoded string
 	 * 
@@ -268,6 +285,8 @@ public class Lsh4Text {
 		if (forest == null)
 			throw new NullPointerException();
 
+		document = removeStopChar(document);
+
 		ShinglingSet set = new ShinglingSet();
 		set.addShingling(document, minKgram, maxKgram);
 
@@ -290,6 +309,8 @@ public class Lsh4Text {
 	public static int[] getMinHashSignature(String document, double similartyError) {
 		if (forest == null)
 			throw new NullPointerException();
+
+		document = removeStopChar(document);
 
 		MinHash minhash = new MinHash(similartyError, forest.length, LSH_SEED);
 		return minhash.signature(getVector(document));
@@ -378,6 +399,7 @@ public class Lsh4Text {
 	 */
 	public static void addDocumentToUntrimmedForest(String document) {
 		getInstance();
+		document = removeStopChar(document);
 		forest = null;
 		Integer[] documentTokens = ShinglingSet.getTokensForMessage(document, minKgram, maxKgram);
 

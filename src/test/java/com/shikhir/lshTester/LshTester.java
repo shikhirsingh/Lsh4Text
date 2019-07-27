@@ -32,7 +32,5 @@ public class LshTester {
 		int buckets[] = Lsh4Text.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 2);
 		
 		assertEquals(buckets.length, 2);
-	}
-	
-	
+	}	
 }

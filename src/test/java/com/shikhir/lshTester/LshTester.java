@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import com.shikhir.lsh.str.Lsh4Text;
+import com.shikhir.util.stringops.Stopwords;
 
 public class LshTester {
 
@@ -19,18 +20,50 @@ public class LshTester {
 		assertEquals(75, similarity); // document1 and document2 are 75% the same
 	}
 	
+	
+
+
+	
 	@Test
 	public void testForestCreation() {
+
+		final int KGRAM_MIN = 1;
+		final int KGRAM_MAX = 1;
+		final int MAX_NUMBER_OF_BUCKETS = 2;
+		final boolean wordTokens = true;
+		final boolean removeStopWords = true;
+
+		
+		Lsh4Text lshText = new Lsh4Text(removeStopWords);
+
 		try {
-			Lsh4Text.loadFile("test_data_movie_plots.txt", "UTF-8");
+			lshText.loadFile("test_data_movie_plots.txt", "UTF-8", wordTokens, KGRAM_MIN, KGRAM_MAX);
 		} catch (IOException e) {
 			fail("could not find test file");
 		}
-		System.out.println("Untrimmed Size =" + Lsh4Text.untrimmedForestSize());
-		assertEquals(Lsh4Text.untrimmedForestSize(), 10320);
-		Lsh4Text.buildForest();
-		int buckets[] = Lsh4Text.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 2);
+		System.out.println("Untrimmed Forest size:"+lshText.untrimmedForestSize());
+		//lshText.printTopShingleAndCount(10);
+		System.out.println("Number of tokens used more than once = "+lshText.findCountofIndexInUntrimmedForest(1));
+		assertEquals(lshText.untrimmedForestSize(), 2272);
+		lshText.buildForest();
 		
+		int buckets[] = lshText.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 
+											true, 
+											KGRAM_MIN, 
+											KGRAM_MAX, 
+											MAX_NUMBER_OF_BUCKETS);
 		assertEquals(buckets.length, 2);
 	}	
+	
+	@Test
+	public void stopwords() {
+		Lsh4Text lsh4Text = new Lsh4Text(true);
+		
+		String sentence = "Hello my name is Shikhir. This is a test to see if the stopwords function actually remove all the stopwords.";
+		String removedStopWords = Stopwords.removeStopWords(sentence);
+		
+		assertEquals(removedStopWords, "Shikhir. test stopwords function remove stopwords.");
+	}
+
+	
 }

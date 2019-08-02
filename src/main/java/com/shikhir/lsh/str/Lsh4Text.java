@@ -16,7 +16,9 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.shikhir.lsh.forest.ForestShingle;
+import com.shikhir.lsh.shingling.Shingle;
 import com.shikhir.lsh.shingling.ShinglingSet;
+import com.shikhir.util.stringops.Stopwords;
 
 import info.debatty.java.lsh.LSHMinHash;
 import info.debatty.java.lsh.MinHash;
@@ -24,30 +26,29 @@ import me.lemire.integercompression.differential.IntegratedIntCompressor;
 
 public class Lsh4Text {
 
-	private static TreeMap<Integer, ForestShingle> untrimmedForestMap = new TreeMap<Integer, ForestShingle>();
+	private  TreeMap<Integer, ForestShingle> untrimmedForestMap = new TreeMap<Integer, ForestShingle>();
 
-	private static Integer[] forest = null;
+	private  Integer[] forest = null;
 	private static final int RECOMMENDED_VECTOR_SIZE = 1000;
 
-	private static Lsh4Text single_instance = null;
-
-	private static int minKgram = 3; // default Value set to three
-	private static int maxKgram = 3; // default Value set to three
+	private boolean removeStopWords=false;
+	
 	private static final int LSH_SEED = 1234567890; // Seed chosen
 
-	private Lsh4Text() {
+	public Lsh4Text() {
 	}
 
-	public static Lsh4Text getInstance() {
-		if (single_instance == null)
-			single_instance = new Lsh4Text();
-
-		return single_instance;
+	/**
+	 * Returns the Jaccard Similarity of two different vectors
+	 * 
+	 * @param removeStopwords Removes stop words while creating a vector or inputting into forest
+	 */
+	public Lsh4Text(boolean removeStopwords) {
+		this.removeStopWords = removeStopwords;
 	}
-
 	
 	private static String removeStopChar(String text) {
-		return text.replaceAll("[.,:*;!()]", "").replaceAll("s+"," ");
+		return text.replaceAll("[.,:*;!()'-]", "").replaceAll("\\s+"," ");
 	}
 	
 	/**
@@ -56,7 +57,7 @@ public class Lsh4Text {
 	 * 
 	 * @return returns the default bucket size based on the size of the forest()
 	 */
-	public static int defaultBucketSize() {
+	public int defaultBucketSize() {
 		final int BUCKET_MULTIPLIER = 3;
 		int bucketSize = (int) (Math.sqrt(forest.length) * BUCKET_MULTIPLIER);
 		// if(bucketSize > 10) bucketSize = (int) Math.round((bucketSize)/10.0) * 10; //
@@ -77,7 +78,7 @@ public class Lsh4Text {
 	}
 
 	/**
-	 * Returns the Jaccard Similarity of the vectors
+	 * Returns the Jaccard Similarity of two different vectors
 	 * 
 	 * @param vector1 The document which needs to be analyzed
 	 * @param vector2   determines the number of possible buckets
@@ -94,7 +95,7 @@ public class Lsh4Text {
 	 * @param encoded a base64 encoded string which was created by the
 	 *                encodeForestAsBase64()
 	 */
-	public static void decodeForestFromBase64(String encoded) {
+	public void decodeForestFromBase64(String encoded) {
 		byte[] decoded = Base64.getDecoder().decode(encoded);
 
 		IntBuffer intBuf = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer();
@@ -104,9 +105,9 @@ public class Lsh4Text {
 		IntegratedIntCompressor iic = new IntegratedIntCompressor();
 		int[] uncompressed = iic.uncompress(array); // equals to data
 
-		forest = new Integer[uncompressed.length];
+		this.forest = new Integer[uncompressed.length];
 		for (int i = 0; i < uncompressed.length; i++) {
-			forest[i] = uncompressed[i];
+			this.forest[i] = uncompressed[i];
 		}
 	}
 
@@ -115,7 +116,7 @@ public class Lsh4Text {
 	 * 
 	 * @return returns an base64 encoded value of forest
 	 */
-	public static String encodeForestAsBase64() {
+	public String encodeForestAsBase64() {
 
 		int ints[] = new int[forest.length];
 
@@ -143,11 +144,14 @@ public class Lsh4Text {
 	 * A default bucket is estimate for convenience.
 	 * 
 	 * @param document The document which needs to be analyzed
+	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
+ 	 * @param minKGrams minimum size of shingling
+	 * @param maxKGrams maximum size of shingling
 	 * @param stages   determines the number of possible buckets
 	 * @return returns list of possible buckets which may contain this text.
 	 */
-	public static int[] getBuckets(String document, int stages) {
-		return getBuckets(document, stages, defaultBucketSize());
+	public int[] getBuckets(String document, boolean wordTokens, int minKGrams, int maxKGrams, int stages) {
+		return getBuckets(document, wordTokens, minKGrams, maxKGrams, stages, defaultBucketSize());
 	}
 
 	/**
@@ -159,13 +163,16 @@ public class Lsh4Text {
 	 * Levenshtein distance or cosine similarity on the actual body of the document.
 	 * 
 	 * @param document   The document which needs to be analyzed
+	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
+ 	 * @param minKGrams minimum size of shingling
+	 * @param maxKGrams maximum size of shingling
 	 * @param stages     determines the number of possible buckets
 	 * @param bucketSize The document for which the boolean vector is being created
 	 * @return returns list of possible buckets which may contain this text.
 	 */
-	public static int[] getBuckets(String document, int stages, int bucketSize) {
+	public int[] getBuckets(String document, boolean wordTokens, int minKGrams, int maxKGrams, int stages, int bucketSize) {
 
-		boolean vector[] = getVector(document);
+		boolean vector[] = getVector(document, wordTokens, minKGrams, maxKGrams);
 
 		// Create and configure LSH algorithm
 		LSHMinHash lsh = new LSHMinHash(stages, bucketSize, vector.length, LSH_SEED);
@@ -181,7 +188,7 @@ public class Lsh4Text {
 	 * 
 	 * @return Returns the full untrimmed forest.
 	 */
-	private static ArrayList<ForestShingle> getUntrimmedForest(boolean decending) {
+	private ArrayList<ForestShingle> getUntrimmedForest(boolean decending) {
 		if (untrimmedForestMap == null)
 			throw new NullPointerException();
 
@@ -200,7 +207,7 @@ public class Lsh4Text {
 	 * 
 	 * @return count of unique shinglings in untrimmed forest.
 	 */
-	public static int untrimmedForestSize() {
+	public int untrimmedForestSize() {
 		if (untrimmedForestMap == null)
 			throw new NullPointerException();
 		else
@@ -213,9 +220,11 @@ public class Lsh4Text {
 	 * count is less than or equal to the value of the parameter. This should be
 	 * used to determine the size of the vector.
 	 * 
+ 	 * countNumber The frequency count of the token
+	 * 
 	 * @return The frequency could to find in an untrimmed forest.
 	 */
-	public static int findCountofIndexInUntrimmedForest(int countNumber) {
+	public int findCountofIndexInUntrimmedForest(int countNumber) {
 		ArrayList<ForestShingle> forest = getUntrimmedForest(true);
 
 		for (int i = 0; i < forest.size(); i++) {
@@ -229,23 +238,25 @@ public class Lsh4Text {
 	/**
 	 * This will print all the shingles from a forest.
 	 */
-	public static void printForest() {
-		for (int i : forest) {
+	public void printTrimmedForest() {
+		for (int i : this.forest) {
 			System.out.println(i);
 		}
 	}
 
 	/**
-	 * This will print all the shingles and their count from the unTrimmed forest.
+	 * This will print all the shingles and their count from the unTrimmed forest in descending order of frequency count.
 	 * This could be used to identify the vector size needed to build a forest.
+	 * 
+	 * @param head the count of top shingles to be returned
 	 */
-	public static void printShingleAndCount(int head) {
+	public void printTopShingleAndCount(int head) {
 		if(untrimmedForestMap.size()<head) throw new IllegalArgumentException();
 		
 		ArrayList<ForestShingle> forest = getUntrimmedForest(true);
 
 		for(int i=0; i<head; i++) {
-			System.out.println(forest.get(i).getId()+ " --> "+ forest.get(i).getShingleCountInForest());
+			System.out.println(forest.get(i).getToken()+ " → "+ forest.get(i).getShingleCountInForest());
 		}
 	}
 
@@ -256,10 +267,10 @@ public class Lsh4Text {
 	 * 
 	 * @return The forest is returned as an array of integers
 	 */
-	public static Integer[] getForest() {
-		if (forest == null)
+	public Integer[] getForest() {
+		if (this.forest == null)
 			throw new NullPointerException();
-		return forest;
+		return this.forest;
 	}
 
 	/**
@@ -267,7 +278,7 @@ public class Lsh4Text {
 	 * if the size of the forest is small (less than 1000) or there is very little
 	 * redunancy.
 	 */
-	public static void buildFullForest() {
+	public void buildFullForest() {
 		buildForest(untrimmedForestMap.size());
 	}
 
@@ -279,20 +290,26 @@ public class Lsh4Text {
 	 * 
 	 * @param document The text of the document for which the boolean vector is
 	 *                 being created
+	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
+ 	 * @param minKGrams minimum size of shingling
+	 * @param maxKGrams maximum size of shingling
+	 *                 
 	 * @return The vector for the string
 	 */
-	public static boolean[] getVector(String document) {
-		if (forest == null)
+	public boolean[] getVector(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+		if (this.forest == null)
 			throw new NullPointerException();
 
 		document = removeStopChar(document);
+		if(removeStopWords) Stopwords.removeStopWords(document);
+
 
 		ShinglingSet set = new ShinglingSet();
-		set.addShingling(document, minKgram, maxKgram);
+		set.addShingling(document, wordTokens, minKGrams, maxKGrams);
 
-		boolean[] vector = new boolean[forest.length];
+		boolean[] vector = new boolean[this.forest.length];
 
-		for (int i = 0; i < forest.length; i++) {
+		for (int i = 0; i < this.forest.length; i++) {
 			vector[i] = set.contains(forest[i]);
 		}
 
@@ -304,16 +321,18 @@ public class Lsh4Text {
 	 * 
 	 * @param document The text of the document for which the signature is being
 	 *                 created
+	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
+ 	 * @param minKGram minimum size of shingling
+	 * @param maxKGram maximum size of shingling
+	 * @param similartyError The similarity error 
 	 * @return Gets the MinHash signature of the documents
 	 */
-	public static int[] getMinHashSignature(String document, double similartyError) {
-		if (forest == null)
+	public int[] getMinHashSignature(String document, boolean wordTokens, int minKGram, int maxKGram, double similartyError) {
+		if (this.forest == null)
 			throw new NullPointerException();
 
-		document = removeStopChar(document);
-
 		MinHash minhash = new MinHash(similartyError, forest.length, LSH_SEED);
-		return minhash.signature(getVector(document));
+		return minhash.signature(getVector(document, wordTokens, minKGram, maxKGram));
 	}
 
 	/**
@@ -329,14 +348,14 @@ public class Lsh4Text {
 	 * 
 	 */
 
-	public static double signatureSimilarity(int[] sig1, int[] sig2, double similarityError) {
-		MinHash minhash = new MinHash(similarityError, forest.length, LSH_SEED);
+	public double signatureSimilarity(int[] sig1, int[] sig2, double similarityError) {
+		MinHash minhash = new MinHash(similarityError, this.forest.length, LSH_SEED);
 		return minhash.similarity(sig1, sig2);
 	}
 
-	private static int getDefaultVector() {
-		if (untrimmedForestMap.size() < 800) {
-			return untrimmedForestMap.size() - 1;
+	private int getDefaultVector() {
+		if (this.untrimmedForestMap.size() < 800) {
+			return this.untrimmedForestMap.size() - 1;
 		}
 		int duplicateIndex = findCountofIndexInUntrimmedForest(1);
 		if (duplicateIndex < 1200)
@@ -351,7 +370,7 @@ public class Lsh4Text {
 	 * than 1200 is used.
 	 * 
 	 */
-	public static void buildForest() {
+	public void buildForest() {
 		buildForest(getDefaultVector());
 	}
 
@@ -361,7 +380,7 @@ public class Lsh4Text {
 	 * 
 	 * @param vectorSize The size of the vector used to build the forest
 	 */
-	public static void buildForest(int vectorSize) {
+	public void buildForest(int vectorSize) {
 
 		if (vectorSize > untrimmedForestMap.size()) {
 			throw new IllegalArgumentException();
@@ -385,70 +404,52 @@ public class Lsh4Text {
 	 * 
 	 * @param forestInt An array of integers that contain the forest
 	 */
-	public static void loadForest(Integer[] forestInt) {
-		forest = forestInt;
-		Arrays.sort(forest);
+	public void loadForest(Integer[] forestInt) {
+		this.forest = forestInt;
+		Arrays.sort(this.forest);
 	}
 
 	/**
 	 * Adds the document to the forest by creating shingles of the documents and
 	 * then adding it to the forest. If the machine does not have enough memory, you
-	 * may see an out of memory error if your forest gets too big.
+	 * may see an out of memory error if your forest gets too big. This method does not
+	 * look for any separator, which can result in a longer list of shinglings
 	 * 
 	 * @param document The text of the document
+	 * @param wordTokens The text is tokenized by charecters instead of words
+ 	 * @param minKGram minimum size of shingling
+	 * @param maxKGram maximum size of shingling
 	 */
-	public static void addDocumentToUntrimmedForest(String document) {
-		getInstance();
+	public void addDocumentToUntrimmedForest(String document, boolean wordTokens, int minKGram, int maxKGram) {
 		document = removeStopChar(document);
+		if(this.removeStopWords) {
+			document=Stopwords.removeStopWords(document);
+		};
 		forest = null;
-		Integer[] documentTokens = ShinglingSet.getTokensForMessage(document, minKgram, maxKgram);
+		Shingle[] documentShingles = ShinglingSet.getTokensForMessage(document, wordTokens, minKGram, maxKGram);
 
-		for (Integer tkn : documentTokens) {
-			ForestShingle fs = untrimmedForestMap.get(tkn);
-			if (fs == null)
-				fs = new ForestShingle(tkn, 0);
+		for (Shingle s : documentShingles) {
+			ForestShingle fs = untrimmedForestMap.get(s.getId());
+			if (fs == null) fs = new ForestShingle(s.toString(), 0);
 
 			fs.increment();
 			untrimmedForestMap.put(fs.getId(), fs);
 		}
 	}
 
-	/**
-	 * Sets the default k-grams used to build forest and find bucket
-	 * 
-	 * @param kGramsMinSize The minimum number of k-Grams used
-	 * @param kGramsMaxSize The maximum number of k-Grams used
-	 */
-	public static void setKgrams(int kGramsMinSize, int kGramsMaxSize) {
-		minKgram = kGramsMinSize;
-		maxKgram = kGramsMaxSize;
-	}
 
 	/**
 	 * Creates forest from a text file by tokenizing the text file. Each line is
 	 * assumed to be its own document.
 	 * 
 	 * @param fileName  The name of the file which will be read to create the forest
+	 * @param encoding The encoded file type (ie. UTF-8)
+	 * @param wordTokens If true, the documents will be tokenized using words, otherwise characters
 	 * @param kGramsMin The minimum number of k-Grams used
 	 * @param kGramsMax The maximum number of k-Grams used
 	 * @return The size of the forest
 	 */
-	public static int loadFile(String fileName, String encoding, int kGramsMin, int kGramsMax) throws IOException {
-		setKgrams(kGramsMin, kGramsMax);
-		return loadFile(fileName, encoding);
-	}
-
-	/**
-	 * Creates forest from a text file by tokenizing the text file. Each line is
-	 * assumed to be its own document. It also assumes that the default min and max
-	 * k-grams are three. Each line of the file must be it's own document. 
-	 * 
-	 * @param fileName The name of the file which will be read to create the forest
-	 * @return The size of the forest
-	 */
-	public static int loadFile(String fileName, String encoding) throws IOException {
-		getInstance();
-		
+	public int loadFile(String fileName, String encoding, boolean wordTokens, int kGramsMin, int kGramsMax) throws IOException {
 		File tldlist = FileUtils.getFile(fileName);
 
 		try {
@@ -456,15 +457,15 @@ public class Lsh4Text {
 
 			while (it.hasNext()) {
 				String text = it.nextLine().replace("\"", "");
-				addDocumentToUntrimmedForest(text);
+				addDocumentToUntrimmedForest(text, wordTokens, kGramsMin, kGramsMax);
 			}
 			it.close();
 		} finally {
 		}
 
 		return untrimmedForestMap.size();
-
 	}
+
 
 	/**
 	 * Give you the levenshtein similarity of two documents as a percentage. Levenshtein Similarty is a
@@ -480,13 +481,17 @@ public class Lsh4Text {
 	public static double levenshteinSimilarity(String document1, String document2) {
 		int a[][] = opennlp.tools.util.StringUtil.levenshteinDistance(document1, document2);
 		double percentage_difference = (double) 1
-				- (double) a[document1.length()][document2.length()] / Math.max(document1.length(), document2.length());
+				- (double) a[document1.length()][document2.length()] / Math.max(document1.length(), 
+						document2.length());
 		return percentage_difference;
 	}
-	
-	public static void close() {
-		forest=null;
-		untrimmedForestMap=null;
+
+	/**
+	 * Releases resources
+	 */
+	public void close() {
+		this.forest=null;
+		this.untrimmedForestMap=null;
 		System.gc();
 	}
 }

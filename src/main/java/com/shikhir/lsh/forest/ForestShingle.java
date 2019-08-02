@@ -1,12 +1,14 @@
 package com.shikhir.lsh.forest;
 
+import com.shikhir.lsh.shingling.Shingle;
+
 public class ForestShingle implements Comparable<ForestShingle>{
-    private final int id;     // counter name
-    private int count;          // current value
+	Shingle shingle;
+	private int count;          // current value
 
     // create a new counter with the given parameters
-    public ForestShingle(int id, int count) {
-        this.id = id;
+    public ForestShingle(String token, int count) {
+    	shingle = new Shingle(token);
         this.count = count;
     } 
 
@@ -15,8 +17,12 @@ public class ForestShingle implements Comparable<ForestShingle>{
         count++;
     } 
 
+    public String getToken() {
+    	return shingle.getToken();
+    }
+
     public int getId() {
-    	return id;
+    	return shingle.getId();
     }
     // return the current count
     public int getShingleCountInForest() {
@@ -25,15 +31,15 @@ public class ForestShingle implements Comparable<ForestShingle>{
 
     // return a string representation of this counter
     public String toString() {
-        return id + ": " + count;
+        return shingle.getToken()+":"+shingle.getId() + ": " + count;
     } 
 
     // compare two Counter objects based on their count
     public int compareTo(ForestShingle that) {
     	
     	Integer thisCount = count;
-
     	return thisCount.compareTo(that.count);
     }
+    
     
 }

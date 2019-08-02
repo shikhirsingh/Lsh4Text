@@ -2,9 +2,10 @@ package com.shikhir.lsh.shingling;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.shikhir.hash.MurmurHash;
 import com.shikhir.util.stringops.StringOperations;
 
 import opennlp.tools.tokenize.SimpleTokenizer;
@@ -13,88 +14,82 @@ import opennlp.tools.util.StringList;
 
 public class ShinglingSet{
 
-	private TreeSet<Integer> shinglingSet = new TreeSet<Integer>();
-	private final static int CJK_NGRAM = 3;
+	private TreeMap<Integer, Shingle> shinglingSet = new TreeMap<Integer, Shingle>();
 	
 	public ShinglingSet(){
 	}	
 	
-	ShinglingSet(String set, int kGramsMin, int kGramsMax){
-		addShingling(set, kGramsMin, kGramsMax);
+	ShinglingSet(String set, boolean wordTokens, int kGramsMin, int kGramsMax){
+		addShingling(set, wordTokens, kGramsMin, kGramsMax);
 	}
-	
-	
-	public static Integer[] getTokensForMessage(String message, int kGramsMin, int kGramsMax) {
-		TreeSet<Integer> localSet = new TreeSet<Integer>();
+
+	public static Shingle[] getTokensForMessage(String text, boolean wordTokens, int kGramsMin, int kGramsMax) {
+		TreeSet<Shingle> localSet = new TreeSet<Shingle>();
 
         NGramModel nGramModel = new NGramModel();
+		StringList slTokens = new StringList(SimpleTokenizer.INSTANCE.tokenize(text.toLowerCase().trim()));
 
-		if(StringOperations.countCJKCharecters(message)>0) {
-	        nGramModel.add(message, CJK_NGRAM, CJK_NGRAM);
+		if(slTokens.size()==0) return null;
+		if(!wordTokens) { // character tokens
+			for(String strTkn: slTokens) {
+				nGramModel.add(strTkn, kGramsMin, kGramsMax); 		
+			}
 		}
 		else {
-			StringList slTokens = new StringList(SimpleTokenizer.INSTANCE.tokenize(message.toLowerCase()));
-	        nGramModel.add(slTokens, kGramsMin, kGramsMax); // TO DO>
+	        nGramModel.add(slTokens, kGramsMin, kGramsMax);
 		}
         for (StringList ngram : nGramModel) {
-			Integer hashVal = new Integer(MurmurHash.hash32(ngram.toString()));
-			localSet.add(hashVal);        	
+ 
+			Shingle s = new Shingle(ngram.toString());
+			localSet.add(s);        	
         }
 
 		Object[] objArray = localSet.toArray();
-		Integer[] tokenArray = Arrays.copyOf(objArray, objArray.length, Integer[].class);
+		Shingle[] tokenArray = Arrays.copyOf(objArray, objArray.length, Shingle[].class);
 
-		
+		localSet=null;  // to save memory
+		nGramModel=null; // to save memory
 		return tokenArray;
 
 	}
-	
 
-	public void addShingling(String shingling, int kGramsMin, int kGramsMax) {
+	public void addShingling(String shingling, boolean wordTokens, int kGramsMin, int kGramsMax) {
 		
-		Integer[] tokenArray = getTokensForMessage(shingling, kGramsMin, kGramsMax);
+		Shingle[] shingleArray = getTokensForMessage(shingling, wordTokens, kGramsMin, kGramsMax);
 		
-		for(Integer tkn : tokenArray) {
-			shinglingSet.add(tkn);
+		for(Shingle s : shingleArray) {
+			shinglingSet.put(s.getId(), s);
 		}
 	}
-
 	public int size() {
 		return shinglingSet.size();
 	}
 
-	public boolean contains(Integer token){
-		return shinglingSet.contains(token);
-	}
-	
-	
-	public static boolean hasCjk(String body) {
-		return false;
+	public boolean contains(Integer id){
+		return shinglingSet.containsKey(id);
 	}
 
-
-	public Integer[] getAllTokens() {
-		Integer[] tokenArray = new Integer[shinglingSet.size()];
-        Iterator<Integer> value = shinglingSet.iterator(); 
-
-        int i=0;
-        while (value.hasNext() && i<tokenArray.length) { 
-        	tokenArray[i] = value.next();
-        	i++;
-        } 
+	public Integer[] getAllId() {
 		
-		return tokenArray;
+		Set<Integer> allIdSet = shinglingSet.keySet();
+		
+        Integer[] arr = Arrays.copyOf(allIdSet.toArray(), allIdSet.size(), Integer[].class); 
+
+		return arr;
 	}
 	
 	public Integer[] subset(int count) {
 		
+		if(count>shinglingSet.size()) throw new IllegalArgumentException();
 		Integer[] subSet = new Integer[count];
 
-        Iterator<Integer> value = shinglingSet.iterator(); 
+        Set<Integer> keys = shinglingSet.keySet(); 
 
         int i=0;
-        while (value.hasNext() && i<count) { 
-        	subSet[i] = value.next();
+        Iterator<Integer> itr = keys.iterator();
+        
+        while (itr.hasNext() && i<count) { 
+        	subSet[i] = itr.next();
         	i++;
         } 
 

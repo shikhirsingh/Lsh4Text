@@ -38,7 +38,12 @@ public class ForestShingle implements Comparable<ForestShingle>{
     public int compareTo(ForestShingle that) {
     	
     	Integer thisCount = count;
+    	if(thisCount.compareTo(that.count)==0) {
+    		return this.getToken().length()-that.getToken().length();
+    	}
     	return thisCount.compareTo(that.count);
+    	
+    	
     }
     
     

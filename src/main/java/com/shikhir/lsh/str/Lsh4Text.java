@@ -8,8 +8,14 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -484,6 +490,45 @@ public class Lsh4Text {
 				- (double) a[document1.length()][document2.length()] / Math.max(document1.length(), 
 						document2.length());
 		return percentage_difference;
+	}
+	
+	
+	
+	/**
+	 * Removes duplicates from untrimmed forest. This function is useful when the encoding is by characters instead of words
+	 * 
+	 * @param percentage The percentage of frequency count a token must be in the range of in order to remove
+
+	 */
+
+	public void clearnUntrimmedForest(int percentage) {
+		TreeSet<Integer> remove = new TreeSet<Integer>();
+		
+		List<ForestShingle> values = (List<ForestShingle>) untrimmedForestMap.values();
+	    Collections.sort(values);
+
+	    for(int i=0; i< values.size(); i++) {
+	    	int iCount = values.get(i).getShingleCountInForest();
+	    	String iToken = values.get(i).getToken().replace("[","").replace("]", "");
+	    	
+		    for(int j=i; j<values.size(); j++) {
+		    	String jToken = values.get(j).getToken().replace("[","").replace("]", "");
+
+		    	if(!iToken.equals(jToken)){
+			    	int jCount = values.get(j).getShingleCountInForest();
+			    	int p = iCount-jCount==0?0:(int) Math.abs((100 * (((double)iCount - (double)jCount) / (double)jCount)));
+		    	
+		    		if(jToken.contains(iToken) && p < percentage) {
+		    			remove.add(values.get(j).getId());
+		    		}
+		    	}
+		    }
+
+	    }
+	    
+	    for(Integer rem: remove) {
+	    	untrimmedForestMap.remove(rem);
+	    }
 	}
 
 	/**

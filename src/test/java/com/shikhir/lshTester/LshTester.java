@@ -21,11 +21,8 @@ public class LshTester {
 	}
 	
 	
-
-
-	
 	@Test
-	public void testForestCreation() {
+	public void wordsTokensTest() {
 
 		final int KGRAM_MIN = 1;
 		final int KGRAM_MAX = 1;
@@ -34,15 +31,17 @@ public class LshTester {
 		final boolean removeStopWords = true;
 
 		
+		System.out.println("Word tokens test");
+
 		Lsh4Text lshText = new Lsh4Text(removeStopWords);
 
 		try {
-			lshText.loadFile("test_data_movie_plots.txt", "UTF-8", wordTokens, KGRAM_MIN, KGRAM_MAX);
+			lshText.loadFile("src/test/resources/test_data_movie_plots.txt", "UTF-8", wordTokens, KGRAM_MIN, KGRAM_MAX);
 		} catch (IOException e) {
 			fail("could not find test file");
 		}
 		System.out.println("Untrimmed Forest size:"+lshText.untrimmedForestSize());
-		//lshText.printTopShingleAndCount(10);
+		lshText.printTopShingleAndCount(10);
 		System.out.println("Number of tokens used more than once = "+lshText.findCountofIndexInUntrimmedForest(1));
 		assertEquals(lshText.untrimmedForestSize(), 2272);
 		lshText.buildForest();
@@ -54,6 +53,46 @@ public class LshTester {
 											MAX_NUMBER_OF_BUCKETS);
 		assertEquals(buckets.length, 2);
 	}	
+	
+	@Test
+	public void charecterTokensTest() {
+
+		final int KGRAM_MIN = 6;
+		final int KGRAM_MAX = 20;
+		final int MAX_NUMBER_OF_BUCKETS = 2;
+		final boolean wordTokens = false;
+		final boolean removeStopWords = false;
+
+		
+		Lsh4Text lshText = new Lsh4Text(removeStopWords);
+
+		System.out.println("Character tokens test");
+		try {
+			System.out.println("Loading Data file");
+			lshText.loadFile("src/test/resources/phishing_website_dataset_test.txt", "UTF-8", wordTokens, KGRAM_MIN, KGRAM_MAX);
+			System.out.println("File Loaded");
+		} catch (IOException e) {
+			fail("could not find test file");
+		}
+		System.out.println("Untrimmed Forest size:"+lshText.untrimmedForestSize());
+		System.out.println("Removing frequency less than 2");		
+		lshText.removeLessThanFrequency(15);
+		System.out.println("New trimmed Forest size:"+lshText.untrimmedForestSize());
+
+		lshText.clearnUntrimmedForest(40);
+		System.out.println("New Cleaned Forest size:"+lshText.untrimmedForestSize());
+		
+		lshText.printTopShingleAndCount(20);
+		assertEquals(lshText.untrimmedForestSize(), 54);
+		lshText.buildForest();
+		
+		int buckets[] = lshText.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 
+											true, 
+											KGRAM_MIN, 
+											KGRAM_MAX, 
+											MAX_NUMBER_OF_BUCKETS);
+		assert(buckets.length <= 2);
+	}		
 	
 	@Test
 	public void stopwords() {

@@ -8,14 +8,10 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -38,7 +34,8 @@ public class Lsh4Text {
 	private static final int RECOMMENDED_VECTOR_SIZE = 1000;
 
 	private boolean removeStopWords=false;
-	
+	private static final Logger log = Logger.getLogger(Lsh4Text.class.getName());
+
 	private static final int LSH_SEED = 1234567890; // Seed chosen
 
 	public Lsh4Text() {
@@ -239,6 +236,27 @@ public class Lsh4Text {
 			}
 		}
 		return forest.size();
+	}
+	
+	/**
+	 * An untrimmed forest is sorted by frequency of shinglings found in all
+	 * documents and all shinglings less than or equal to the count number are removed
+	 * 
+ 	 * countNumber The frequency count of the token
+ 	 */	
+	public void removeLessThanFrequency(int countNumber) {
+		ArrayList<ForestShingle> forest = getUntrimmedForest(true);
+		TreeSet<Integer> ts = new TreeSet<Integer>();
+		
+		for(ForestShingle sh: forest) {
+			if(sh.getShingleCountInForest()<= countNumber) {
+				ts.add(sh.getId());
+			}
+		}
+
+		for(int i: ts) {
+			untrimmedForestMap.remove(i);
+		}
 	}
 
 	/**
@@ -498,37 +516,44 @@ public class Lsh4Text {
 	 * Removes duplicates from untrimmed forest. This function is useful when the encoding is by characters instead of words
 	 * 
 	 * @param percentage The percentage of frequency count a token must be in the range of in order to remove
-
 	 */
 
 	public void clearnUntrimmedForest(int percentage) {
-		TreeSet<Integer> remove = new TreeSet<Integer>();
 		
-		List<ForestShingle> values = (List<ForestShingle>) untrimmedForestMap.values();
-	    Collections.sort(values);
+	    ForestShingle[] values = untrimmedForestMap.values().toArray(new ForestShingle[untrimmedForestMap.size()]);
+	    
+	    Arrays.sort(values, Collections.reverseOrder());
 
-	    for(int i=0; i< values.size(); i++) {
-	    	int iCount = values.get(i).getShingleCountInForest();
-	    	String iToken = values.get(i).getToken().replace("[","").replace("]", "");
+	    for(int i=0; i< values.length; i++) {
+	    	int iCount = values[i].getShingleCountInForest();
+	    	String iToken = values[i].getToken().replace("[","").replace("]", "");
+
+    		if(i%1000==0) {
+    			float outputPercent = (float) (100.0*i/values.length);
+    			String formattedString = String.format("%.02f", outputPercent);
+    			if(values.length>10000) log.info(formattedString+"% done ");
+    		}
+
 	    	
-		    for(int j=i; j<values.size(); j++) {
-		    	String jToken = values.get(j).getToken().replace("[","").replace("]", "");
-
+		    for(int j=i; j<values.length; j++) {
+		    	String jToken = values[j].getToken().replace("[","").replace("]", "");
+		    	
 		    	if(!iToken.equals(jToken)){
-			    	int jCount = values.get(j).getShingleCountInForest();
+			    	int jCount = values[j].getShingleCountInForest();
 			    	int p = iCount-jCount==0?0:(int) Math.abs((100 * (((double)iCount - (double)jCount) / (double)jCount)));
 		    	
-		    		if(jToken.contains(iToken) && p < percentage) {
-		    			remove.add(values.get(j).getId());
+			    	if(p > percentage) {
+			    		break;
+			    	};
+			    	
+		    		if(jToken.contains(iToken) && p <= percentage) {
+		    	    	untrimmedForestMap.remove(values[i].getId());
+		    			break;
 		    		}
 		    	}
 		    }
 
-	    }
-	    
-	    for(Integer rem: remove) {
-	    	untrimmedForestMap.remove(rem);
-	    }
+	    }	    
 	}
 
 	/**

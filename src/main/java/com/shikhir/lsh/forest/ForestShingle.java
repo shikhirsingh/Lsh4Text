@@ -39,7 +39,7 @@ public class ForestShingle implements Comparable<ForestShingle>{
     	
     	Integer thisCount = count;
     	if(thisCount.compareTo(that.count)==0) {
-    		return this.getToken().length()-that.getToken().length();
+    		return that.getToken().length()-this.getToken().length();
     	}
     	return thisCount.compareTo(that.count);
     	

@@ -19,7 +19,7 @@ Maven - be sure to check for latest version in Maven:
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>2.0.1</version>
+  <version>2.0.3</version>
 </dependency>
 ```
 
@@ -115,7 +115,8 @@ You can also load the documents one by one
 * 1.0.1 - Small fixes
 * 2.0.0 - Major Updates to support multiple LSH instances
 * 2.0.1 - Lsh4Text.clearnUntrimmedForest() added
+* 2.0.3 - Bug fixes
 
-**Roadmap**
+**Roadmap Features**
 
 * New optional methods to shrink size of untrimmed forest by removing leaves/tokens that have the same jaccard similarity of documents ids

@@ -34,6 +34,8 @@ public class Lsh4Text {
 	private static final int RECOMMENDED_VECTOR_SIZE = 1000;
 
 	private boolean removeStopWords=false;
+	private boolean removeStopCharacters=true;
+	
 	private static final Logger log = Logger.getLogger(Lsh4Text.class.getName());
 
 	private static final int LSH_SEED = 1234567890; // Seed chosen
@@ -46,8 +48,9 @@ public class Lsh4Text {
 	 * 
 	 * @param removeStopwords Removes stop words while creating a vector or inputting into forest
 	 */
-	public Lsh4Text(boolean removeStopwords) {
+	public Lsh4Text(boolean removeStopwords, boolean removeStopCharacters) {
 		this.removeStopWords = removeStopwords;
+		this.removeStopCharacters = removeStopCharacters;
 	}
 	
 	private static String removeStopChar(String text) {
@@ -324,7 +327,8 @@ public class Lsh4Text {
 		if (this.forest == null)
 			throw new NullPointerException();
 
-		document = removeStopChar(document);
+		document = removeStopCharacters?removeStopChar(document):document;
+		
 		if(removeStopWords) Stopwords.removeStopWords(document);
 
 
@@ -445,7 +449,8 @@ public class Lsh4Text {
 	 * @param maxKGram maximum size of shingling
 	 */
 	public void addDocumentToUntrimmedForest(String document, boolean wordTokens, int minKGram, int maxKGram) {
-		document = removeStopChar(document);
+		document = removeStopCharacters?removeStopChar(document):document;
+		
 		if(this.removeStopWords) {
 			document=Stopwords.removeStopWords(document);
 		};

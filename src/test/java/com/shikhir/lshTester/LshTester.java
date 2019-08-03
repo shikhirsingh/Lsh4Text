@@ -33,7 +33,7 @@ public class LshTester {
 		
 		System.out.println("Word tokens test");
 
-		Lsh4Text lshText = new Lsh4Text(removeStopWords);
+		Lsh4Text lshText = new Lsh4Text(removeStopWords, true);
 
 		try {
 			lshText.loadFile("src/test/resources/test_data_movie_plots.txt", "UTF-8", wordTokens, KGRAM_MIN, KGRAM_MAX);
@@ -62,9 +62,9 @@ public class LshTester {
 		final int MAX_NUMBER_OF_BUCKETS = 2;
 		final boolean wordTokens = false;
 		final boolean removeStopWords = false;
-
+		final boolean removeStopCharacters = true;
 		
-		Lsh4Text lshText = new Lsh4Text(removeStopWords);
+		Lsh4Text lshText = new Lsh4Text(removeStopWords, removeStopCharacters);
 
 		System.out.println("Character tokens test");
 		try {
@@ -96,7 +96,7 @@ public class LshTester {
 	
 	@Test
 	public void stopwords() {
-		Lsh4Text lsh4Text = new Lsh4Text(true);
+		Lsh4Text lsh4Text = new Lsh4Text(true, false);
 		
 		String sentence = "Hello my name is Shikhir. This is a test to see if the stopwords function actually remove all the stopwords.";
 		String removedStopWords = Stopwords.removeStopWords(sentence);

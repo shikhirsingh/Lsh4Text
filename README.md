@@ -1,4 +1,4 @@
-# Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm
+ Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm
 
 This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to find similar documents without scanning each documents one by one to determine if they are similar.
 
@@ -19,7 +19,7 @@ Maven - be sure to check for latest version in Maven:
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>2.0.3</version>
+  <version>2.0.4</version>
 </dependency>
 ```
 
@@ -42,7 +42,7 @@ There are a number of parameters that go into a text LSH algorithm. In this impl
 ```
 	Lsh4Text lshText = new Lsh4Text();
 	try {
-		Lsh4Text lshText = new Lsh4Text(true);
+		Lsh4Text lshText = new Lsh4Text(true, true);
 		lshText.loadFile("test_data_movie_plots.txt", "UTF-8", true, 1, 1);
 	} catch (IOException e) {
 		fail("could not find test file");
@@ -116,6 +116,7 @@ You can also load the documents one by one
 * 2.0.0 - Major Updates to support multiple LSH instances
 * 2.0.1 - Lsh4Text.clearnUntrimmedForest() added
 * 2.0.3 - Bug fixes
+* 2.0.4 - Made remove stop characters optional
 
 **Roadmap Features**
 

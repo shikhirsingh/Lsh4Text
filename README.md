@@ -1,4 +1,4 @@
- Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm for text
+#Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm for text
 
 This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to find similar documents without scanning each documents one by one to determine if they are similar.
 

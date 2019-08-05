@@ -21,6 +21,7 @@ import com.shikhir.lsh.forest.ForestShingle;
 import com.shikhir.lsh.shingling.Shingle;
 import com.shikhir.lsh.shingling.ShinglingSet;
 import com.shikhir.util.stringops.Stopwords;
+import com.shikhir.util.stringops.normalize.Normalize;
 
 import info.debatty.java.lsh.LSHMinHash;
 import info.debatty.java.lsh.MinHash;
@@ -36,6 +37,8 @@ public class Lsh4Text {
 	private boolean removeStopWords=false;
 	private boolean removeStopCharacters=true;
 	
+	private boolean normalize=true;
+	
 	private static final Logger log = Logger.getLogger(Lsh4Text.class.getName());
 
 	private static final int LSH_SEED = 1234567890; // Seed chosen
@@ -47,6 +50,7 @@ public class Lsh4Text {
 	 * Returns the Jaccard Similarity of two different vectors
 	 * 
 	 * @param removeStopwords Removes stop words while creating a vector or inputting into forest
+ 	 * @param removeStopCharacters Removes stop charecters (like quotations, colons, etc) while creating a vector or inputting into forest
 	 */
 	public Lsh4Text(boolean removeStopwords, boolean removeStopCharacters) {
 		this.removeStopWords = removeStopwords;
@@ -310,6 +314,18 @@ public class Lsh4Text {
 	}
 
 	/**
+	 * By default, the digits are normalized to increase the the chances of collision for signature.
+	 * You can turn this off.
+	 * 
+	 * @param normalize The text of the document for which the boolean vector is
+	 *                 being created
+	 *                 
+	 */                 
+	public void setNormalize(boolean normalize) {
+		this.normalize = normalize;
+	}
+	
+	/**
 	 * This will get you the vector for a string from the forest. The forest must be
 	 * built in order to create a vector. The size of the vector must be defined
 	 * during the buildForest process. The forest is build by hashing the shinglings
@@ -328,6 +344,7 @@ public class Lsh4Text {
 			throw new NullPointerException();
 
 		document = removeStopCharacters?removeStopChar(document):document;
+		document = normalize?Normalize.all(document):document;
 		
 		if(removeStopWords) Stopwords.removeStopWords(document);
 
@@ -363,6 +380,45 @@ public class Lsh4Text {
 		return minhash.signature(getVector(document, wordTokens, minKGram, maxKGram));
 	}
 
+	/**
+	 * This will get you the vector for a string from the built forest as base64. The forest must be
+	 * built in order to create a vector. The size of the vector must be defined
+	 * during the buildForest process. 
+	 * 
+	 * @param document The text of the document for which the boolean vector is
+	 *                 being created
+	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
+ 	 * @param minKGrams minimum size of shingling
+	 * @param maxKGrams maximum size of shingling
+	 *                 
+	 * @return The vector for the string
+	 */	
+	public String getVectorAsBase64(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+		
+		boolean[] vector = new boolean[this.forest.length];
+		ArrayList<Short> iArr = new ArrayList<Short>();
+
+		vector = getVector(document, wordTokens, minKGrams, maxKGrams);
+		
+		for(short i=0; i<vector.length; i++) {
+			if(vector[i]==true) {
+				iArr.add(i);
+			}
+		}
+		short[] sArray = new short[iArr.size()];
+
+		for(int i=0; i<iArr.size(); i++) {
+			sArray[i] = iArr.get(i);
+		}
+		
+		if(sArray.length==0) return "0";
+		
+		java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocate(sArray.length * 2);
+		bb.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(sArray);
+		return Base64.getEncoder().encodeToString(bb.array());
+				
+	}
+	
 	/**
 	 * Using two MinHash signatures, you can compute the similarity of the
 	 * signatures. Looking at the similarity of the signatures can be a faster
@@ -450,7 +506,8 @@ public class Lsh4Text {
 	 */
 	public void addDocumentToUntrimmedForest(String document, boolean wordTokens, int minKGram, int maxKGram) {
 		document = removeStopCharacters?removeStopChar(document):document;
-		
+		document = normalize?Normalize.all(document):document;
+
 		if(this.removeStopWords) {
 			document=Stopwords.removeStopWords(document);
 		};

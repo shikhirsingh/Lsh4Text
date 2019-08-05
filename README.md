@@ -1,4 +1,4 @@
- Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm
+ Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm for text
 
 This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to find similar documents without scanning each documents one by one to determine if they are similar.
 
@@ -7,7 +7,7 @@ This library makes is simple to use [LSH](https://medium.com/engineering-brainly
 
 * Shikhir Singh
 
-**Dependencies to compile**
+**Dependencies**
 
 * Java 8+ 
 
@@ -19,13 +19,13 @@ Maven - be sure to check for latest version in Maven:
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>2.0.4</version>
+  <version>2.0.5</version>
 </dependency>
 ```
 
 **How LSH Works**
 
-LSH belongs to a class of probabilistic algorithms. In it's simplest form, LSH works by grouping all of your documents (or the document's signature) into n buckets. Each document (or it's signature) needs to be stored in multiple buckets. When you are looking for a document that could be similar, you check each of the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one, just the buckets. Because you only need to search a small number of buckets, it can significantly reduces the size and dimension of the problem. For a more detailed explanation please see [this chapter](http://infolab.stanford.edu/~ullman/mmds/ch3a.pdf) from [Mining Massive Datasets](http://infolab.stanford.edu/~ullman/mmds.html) book. Another explanation is provided in [this blog](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4). 
+LSH belongs to a class of probabilistic algorithms (meaning, you trade accuracy for speed). In it's simplest form, LSH works by grouping all of your documents (or the document's signature) into n buckets. Each document (or it's signature) needs to be stored in multiple buckets. When you are looking for a document that could be similar, you check each of the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one, just the buckets. Because you only need to search a small number of buckets, it can significantly reduces the size and dimension of the problem. For a more detailed explanation please see [this chapter](http://infolab.stanford.edu/~ullman/mmds/ch3a.pdf) from [Mining Massive Datasets](http://infolab.stanford.edu/~ullman/mmds.html) book. Another explanation is provided in [this blog](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4). 
 
 **Parameters You Will Want to Change**
 There are a number of parameters that go into a text LSH algorithm. In this implementation of LSH, some of these are auto computed for you. You will want to try different numbers based on your dataset. I encourage you to try different numbers. 
@@ -116,7 +116,9 @@ You can also load the documents one by one
 * 2.0.0 - Major Updates to support multiple LSH instances
 * 2.0.1 - Lsh4Text.clearnUntrimmedForest() added
 * 2.0.3 - Bug fixes
-* 2.0.4 - Made remove stop characters optional
+* 2.0.4 - Made remove stop characters optional via constructor
+* 2.0.5 - Added Normalization to increase collision of hash
+
 
 **Roadmap Features**
 

@@ -24,7 +24,12 @@ public class ShinglingSet{
 	}
 
 	public static Shingle[] getTokensForMessage(String text, boolean wordTokens, int kGramsMin, int kGramsMax) {
+			
 		TreeSet<Shingle> localSet = new TreeSet<Shingle>();
+		text = text.trim();
+		if(text==null || text.length()==0) {
+			return new Shingle[0];
+		};
 
         NGramModel nGramModel = new NGramModel();
 		StringList slTokens = new StringList(SimpleTokenizer.INSTANCE.tokenize(text.toLowerCase().trim()));

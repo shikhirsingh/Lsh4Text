@@ -2,13 +2,22 @@ package com.shikhir.util.stringops;
 
 public class StringOperations {
 
-	public static int binarySearch(String[] arr, String x) 
+	/**
+	 * A binary search on a sorted string array for a keyword
+	 *   
+	 * @param preSortedArray The presorted array of String values
+	 * @param find The value that is being sought for
+	 * @return an index value of the location of the item found in array; or -1 if not found 
+	 * @since 1.0.0
+	 */
+
+	public static int binarySearch(String[] preSortedArray, String find) 
     { 
-        int l = 0, r = arr.length - 1; 
+        int l = 0, r = preSortedArray.length - 1; 
         while (l <= r) { 
             int m = l + (r - l) / 2; 
   
-            int res = x.compareTo(arr[m]); 
+            int res = find.compareTo(preSortedArray[m]); 
   
             // Check if x is present at mid 
             if (res == 0) 

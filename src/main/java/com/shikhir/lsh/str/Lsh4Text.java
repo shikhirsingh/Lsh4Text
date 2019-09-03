@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.ArrayUtils;
-
+import org.apache.commons.lang3.StringUtils;
 import com.shikhir.lsh.forest.ForestShingle;
 import com.shikhir.lsh.shingling.Shingle;
 import com.shikhir.lsh.shingling.ShinglingSet;
@@ -58,6 +59,8 @@ public class Lsh4Text {
 	}
 	
 	private static String removeStopChar(String text) {
+	    if(StringUtils.isBlank(text)) return "";
+
 		return text.replaceAll("[.,:*;!()'-]", "").replaceAll("\\s+"," ");
 	}
 	
@@ -95,7 +98,10 @@ public class Lsh4Text {
 	 * @return Jaccard Similarity of the vectors.
 	 */
 	public static double jaccardSimilarity4Vectors(boolean[] vector1, boolean[] vector2) {
-        return MinHash.jaccardIndex(vector1, vector2);
+	    Objects.requireNonNull(vector1, "vector1 must not be null");
+	    Objects.requireNonNull(vector2, "vector2 must not be null");
+
+		return MinHash.jaccardIndex(vector1, vector2);
 	}
 	
 	
@@ -106,7 +112,10 @@ public class Lsh4Text {
 	 *                encodeForestAsBase64()
 	 */
 	public void decodeForestFromBase64(String encoded) {
+	    if(StringUtils.isBlank(encoded)) throw new IllegalArgumentException("encoded parameter must contain base64");
+
 		byte[] decoded = Base64.getDecoder().decode(encoded);
+
 
 		IntBuffer intBuf = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer();
 		int[] array = new int[intBuf.remaining()];
@@ -181,7 +190,9 @@ public class Lsh4Text {
 	 * @return returns list of possible buckets which may contain this text.
 	 */
 	public int[] getBuckets(String document, boolean wordTokens, int minKGrams, int maxKGrams, int stages, int bucketSize) {
-
+	    Objects.requireNonNull(document, "document must not be null");
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+	    
 		boolean vector[] = getVector(document, wordTokens, minKGrams, maxKGrams);
 
 		// Create and configure LSH algorithm
@@ -340,6 +351,8 @@ public class Lsh4Text {
 	 * @return The vector for the string
 	 */
 	public boolean[] getVector(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+
 		if (this.forest == null)
 			throw new NullPointerException();
 
@@ -373,6 +386,8 @@ public class Lsh4Text {
 	 * @return Gets the MinHash signature of the documents
 	 */
 	public int[] getMinHashSignature(String document, boolean wordTokens, int minKGram, int maxKGram, double similartyError) {
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+
 		if (this.forest == null)
 			throw new NullPointerException();
 
@@ -394,8 +409,10 @@ public class Lsh4Text {
 	 * @return The vector for the string
 	 */	
 	public String getVectorAsBase64(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+	    
 		
-		boolean[] vector = new boolean[this.forest.length];
+	    boolean[] vector = new boolean[this.forest.length];
 		ArrayList<Short> iArr = new ArrayList<Short>();
 
 		vector = getVector(document, wordTokens, minKGrams, maxKGrams);
@@ -505,14 +522,21 @@ public class Lsh4Text {
 	 * @param maxKGram maximum size of shingling
 	 */
 	public void addDocumentToUntrimmedForest(String document, boolean wordTokens, int minKGram, int maxKGram) {
-		document = removeStopCharacters?removeStopChar(document):document;
-		document = normalize?Normalize.all(document):document;
+	    Objects.requireNonNull(document, "document parameter must not be null");
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+
+	    
+		document = this.removeStopCharacters?removeStopChar(document):document;
+		document = this.normalize?Normalize.all(document):document;
 
 		if(this.removeStopWords) {
 			document=Stopwords.removeStopWords(document);
 		};
 		forest = null;
+	    if(document.trim().length()==0) return;
+
 		Shingle[] documentShingles = ShinglingSet.getTokensForMessage(document, wordTokens, minKGram, maxKGram);
+		if(documentShingles==null || documentShingles.length==0 ) return;
 
 		for (Shingle s : documentShingles) {
 			ForestShingle fs = untrimmedForestMap.get(s.getId());
@@ -536,6 +560,8 @@ public class Lsh4Text {
 	 * @return The size of the forest
 	 */
 	public int loadFile(String fileName, String encoding, boolean wordTokens, int kGramsMin, int kGramsMax) throws IOException {
+	    if(StringUtils.isBlank(fileName)) throw new IllegalArgumentException("fileName parameter cannot be empty or null");
+
 		File tldlist = FileUtils.getFile(fileName);
 
 		try {
@@ -565,6 +591,9 @@ public class Lsh4Text {
 	 */
 
 	public static double levenshteinSimilarity(String document1, String document2) {
+	    Objects.requireNonNull(document1, "document1 parameter must not be null");
+	    Objects.requireNonNull(document2, "document2 parameter must not be null");
+	    
 		int a[][] = opennlp.tools.util.StringUtil.levenshteinDistance(document1, document2);
 		double percentage_difference = (double) 1
 				- (double) a[document1.length()][document2.length()] / Math.max(document1.length(), 

@@ -1,6 +1,6 @@
-# Lsh4Text - A Java Implementation of the Locality sensitive hashing algorithm for text
+# Lsh4Text - A Java Implementation of the Locality Sensitive Hashing(LSH) algorithm; Find similar text documents fast
 
-This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for text documents. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm to find similar documents without scanning each documents one by one to determine if they are similar.
+This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for finding similar text documents very quickly. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm which is used find similar documents without checking each documents one by one to determine if they are similar. 
 
 
 **Author**
@@ -19,7 +19,7 @@ Maven - be sure to check for latest version in Maven:
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>2.0.5</version>
+  <version>2.0.6</version>
 </dependency>
 ```
 
@@ -35,14 +35,14 @@ There are a number of parameters that go into a text LSH algorithm. In this impl
 * Vector Size - Number of unique kgrams - 
 * K-Shingles or kGram size - the minimum and maximum number of k-grams
 
-**Get me started**
+**Just get me started ASAP!**
 
 * First, you will need to create a forest which contains shinglings (i.e. words) of all your documents. Do do this, you can either load a file containing the document or add a document one by one. Here is how you load of file to create an untrimmed forest. 
 
 ```
 	Lsh4Text lshText = new Lsh4Text();
 	try {
-		Lsh4Text lshText = new Lsh4Text(true, true);
+		Lsh4Text lshText = new Lsh4Text(true, true); // params remove stopwords and stopcharecters 
 		lshText.loadFile("test_data_movie_plots.txt", "UTF-8", true, 1, 1);
 	} catch (IOException e) {
 		fail("could not find test file");
@@ -53,8 +53,8 @@ This command above creates an untrimmed forest from a file. The loadFile assumes
 You can also load the documents one by one 
 
 ```
-	final int kGramMin = 3; // three is a good value to get started. Lower this if you aren't getting good results
-	final int kGramMax = 3;
+	final int kGramMin = 3; // three is a good value to get started. Lower this if you aren't getting good results. 
+	final int kGramMax = 3; // kGramsMin and kGramsMax = 1 is also a good option
 	String document = loadStringFromSomewhere();
 	lshText.addDocumentToUntrimmedForest(document, true, kGramMin, kGramMax) {
 
@@ -63,7 +63,7 @@ You can also load the documents one by one
 * After the untrimmed forest is built, you will need to trim the forest. An untrimmed forest contains all the shinglings(words) from all the documents, which is too huge. In order to trim a forest, you will need to look at the frequency counts of the shinglings. You can do this using the Lsh4Text.findCountofIndexInUntrimmedForest(FREQUENCY_COUNT) function. Alternatively, you can just use the default values. The Lsh4Text.buildForest method without any params will guess at default values. WARNING: the default values will not be sufficient if you have a huge number of documents. Do your homework here. 
 
 ```
-	lshText.buildForest()
+	lshText.buildForest() // pass a value larger than 1200 for higher accuracy and more memory usage
 ```
 
 * After your forest is built, you will need to put all your documents(and/or their signatures and vectors) into buckets. Because a document signature is typically smaller than the full document, it's often faster put the signatures into a bucket and check for signature similarity. Sometimes, signatures of the documents are too big. Can you control the size of the signature by adjusting the similarityError parameter. If you store the vectors of each document in the bucket, you could also check the vectors for similarity. If your documents are huge, this could be much quicker. 
@@ -100,6 +100,13 @@ You can also load the documents one by one
 		// if there is a match, do a similarity test on the documents
 	}
 ```
+
+* A vector can also be used as a signature in a pitch to avoid the searching many buckets although the accuracy is very poor (1 bucket). 
+
+```
+	String base64signatureOfDocument = lshText.getVectorAsBase64(document, false, kGramMin, kGramMax); // 
+```
+
 * LSH4Text takes up a lot of memory due to the size of the forest. Close it when you are done to avoid out of memory errors. 
 
 ```
@@ -118,6 +125,7 @@ You can also load the documents one by one
 * 2.0.3 - Bug fixes
 * 2.0.4 - Made remove stop characters optional via constructor
 * 2.0.5 - Added Normalization to increase collision of hash
+* 2.0.6 - Small bug fixes; better README; new dependency on java 1.8
 
 
 **Roadmap Features**

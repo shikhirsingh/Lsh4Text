@@ -5,7 +5,7 @@
 
 	<groupId>com.shikhir</groupId>
 	<artifactId>Lsh4Text</artifactId>
-	<version>2.0.5</version>
+	<version>2.0.6</version>
 	<packaging>jar</packaging>
 
 	<name>Lsh4Text</name>
@@ -26,14 +26,17 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.8</java.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>		
 	</properties>
 	<scm>
 		<url>https://github.com/shikhirsingh/Lsh4Text</url>
 		<connection>
-            scm:git:git://github.com/mautini/Lsh4Text.git
+            scm:git:git://github.com/shikhirsingh/Lsh4Text.git
         </connection>
 		<developerConnection>
-            scm:git:ssh://git@github.com:mautini/Lsh4Text.git
+            scm:git:ssh://git@github.com:shikhirsingh/Lsh4Text.git
         </developerConnection>
 	</scm>
 	<dependencies>
@@ -58,8 +61,9 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.0</version>
+			<version>3.9</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.linkedin.urls</groupId>
 			<artifactId>url-detector</artifactId>

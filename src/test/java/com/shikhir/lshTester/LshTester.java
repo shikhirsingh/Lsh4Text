@@ -42,6 +42,13 @@ public class LshTester {
 	}
 	
 	@Test
+	public void testMessage() {
+		
+		
+		assertEquals(true, true); 
+	}
+	
+	@Test
 	public void testForestSerialization() {
 		final int KGRAM_MIN = 1;
 		final int KGRAM_MAX = 1;

@@ -209,7 +209,7 @@ public class Lsh4Text {
 	 * 
 	 * @return Returns the full untrimmed forest.
 	 */
-	private ArrayList<ForestShingle> getUntrimmedForest(boolean decending) {
+	public ArrayList<ForestShingle> getUntrimmedForest(boolean decending) {
 		if (untrimmedForestMap == null)
 			throw new NullPointerException();
 
@@ -568,7 +568,8 @@ public class Lsh4Text {
 			LineIterator it = FileUtils.lineIterator(tldlist, encoding);
 
 			while (it.hasNext()) {
-				String text = it.nextLine().replace("\"", "");
+				String text = it.nextLine().replace("\"", "").trim();
+				if(text.length()<3) continue;
 				addDocumentToUntrimmedForest(text, wordTokens, kGramsMin, kGramsMax);
 			}
 			it.close();

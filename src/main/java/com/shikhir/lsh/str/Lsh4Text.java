@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -33,6 +34,8 @@ public class Lsh4Text {
 	private  TreeMap<Integer, ForestShingle> untrimmedForestMap = new TreeMap<Integer, ForestShingle>();
 
 	private  Integer[] forest = null;
+	private TreeMap<Integer, Integer> forestIndexMap = new TreeMap<Integer, Integer>();
+	
 	private static final int RECOMMENDED_VECTOR_SIZE = 1000;
 
 	private boolean removeStopWords=false;
@@ -58,10 +61,15 @@ public class Lsh4Text {
 		this.removeStopCharacters = removeStopCharacters;
 	}
 	
+	public Lsh4Text(boolean removeStopwords, boolean removeStopCharacters, boolean ignoreNonAlpha) {
+		this.removeStopWords = removeStopwords;
+		this.removeStopCharacters = removeStopCharacters;
+	}
+
 	private static String removeStopChar(String text) {
 	    if(StringUtils.isBlank(text)) return "";
 
-		return text.replaceAll("[.,:*;!()'-]", "").replaceAll("\\s+"," ");
+		return text.replaceAll("[.?=_,【】%:*;|�!()'-]", "").replaceAll("\\s+"," ").trim();
 	}
 	
 	/**
@@ -124,8 +132,10 @@ public class Lsh4Text {
 		IntegratedIntCompressor iic = new IntegratedIntCompressor();
 		int[] uncompressed = iic.uncompress(array); // equals to data
 
+		forestIndexMap.clear();	
 		this.forest = new Integer[uncompressed.length];
 		for (int i = 0; i < uncompressed.length; i++) {
+			forestIndexMap.put(uncompressed[i], i);			
 			this.forest[i] = uncompressed[i];
 		}
 	}
@@ -359,19 +369,51 @@ public class Lsh4Text {
 		document = removeStopCharacters?removeStopChar(document):document;
 		document = normalize?Normalize.all(document):document;
 		
-		if(removeStopWords) Stopwords.removeStopWords(document);
-
+		if(removeStopWords) document = Stopwords.removeStopWords(document);
 
 		ShinglingSet set = new ShinglingSet();
 		set.addShingling(document, wordTokens, minKGrams, maxKGrams);
 
-		boolean[] vector = new boolean[this.forest.length];
+		Integer[] id = set.getAllId();
 
-		for (int i = 0; i < this.forest.length; i++) {
-			vector[i] = set.contains(forest[i]);
+		int forestSize = this.forest.length;
+		boolean[] vector = new boolean[forestSize];
+
+		for(Integer i: id) {
+			Integer index = forestIndexMap.get(i);
+			if(index!=null) vector[index]=true;
 		}
-
 		return vector;
+	}
+	
+	public int countDocumentShinglingsInForest(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
+
+		if (this.forest == null)
+			throw new NullPointerException();
+
+		document = removeStopCharacters?removeStopChar(document):document;
+		document = normalize?Normalize.all(document):document;
+		
+		if(removeStopWords) document = Stopwords.removeStopWords(document);
+
+		ShinglingSet set = new ShinglingSet();
+		set.addShingling(document, wordTokens, minKGrams, maxKGrams);
+
+		Integer[] id = set.getAllId();
+
+		int forestSize = this.forest.length;
+		boolean[] vector = new boolean[forestSize];
+
+		int found=0;
+		for(Integer i: id) {
+			Integer index = forestIndexMap.get(i);
+			if(index!=null) {
+				vector[index]=true;
+				found++;
+			}
+		}
+		return found;
 	}
 
 	/**
@@ -398,7 +440,7 @@ public class Lsh4Text {
 	/**
 	 * This will get you the vector for a string from the built forest as base64. The forest must be
 	 * built in order to create a vector. The size of the vector must be defined
-	 * during the buildForest process. 
+	 * during the buildForest process. This could be used as a weak signature.
 	 * 
 	 * @param document The text of the document for which the boolean vector is
 	 *                 being created
@@ -411,7 +453,6 @@ public class Lsh4Text {
 	public String getVectorAsBase64(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
 	    if(StringUtils.isBlank(document)) throw new IllegalArgumentException("document parameter cannot be empty");
 	    
-		
 	    boolean[] vector = new boolean[this.forest.length];
 		ArrayList<Short> iArr = new ArrayList<Short>();
 
@@ -435,7 +476,7 @@ public class Lsh4Text {
 		return Base64.getEncoder().encodeToString(bb.array());
 				
 	}
-	
+
 	/**
 	 * Using two MinHash signatures, you can compute the similarity of the
 	 * signatures. Looking at the similarity of the signatures can be a faster
@@ -497,6 +538,13 @@ public class Lsh4Text {
 		Arrays.sort(forest);
 		unTrimmedForest = null;
 		untrimmedForestMap = null; // releasing to free up memory
+
+		forestIndexMap.clear();
+		
+		for(int i=0; i<forest.length; i++) {
+			forestIndexMap.put(this.forest[i], i);			
+		}		
+		
 		System.gc();
 	}
 
@@ -508,6 +556,12 @@ public class Lsh4Text {
 	public void loadForest(Integer[] forestInt) {
 		this.forest = forestInt;
 		Arrays.sort(this.forest);
+
+		forestIndexMap.clear();
+		
+		for(int i=0; i<forest.length; i++) {
+			forestIndexMap.put(this.forest[i], i);			
+		}
 	}
 
 	/**
@@ -569,6 +623,7 @@ public class Lsh4Text {
 
 			while (it.hasNext()) {
 				String text = it.nextLine().replace("\"", "").trim();
+
 				if(text.length()<3) continue;
 				addDocumentToUntrimmedForest(text, wordTokens, kGramsMin, kGramsMax);
 			}

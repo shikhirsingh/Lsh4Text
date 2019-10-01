@@ -145,7 +145,8 @@ public class LshTester {
 		System.out.println("Untrimmed Forest size:"+lshText.untrimmedForestSize());
 		lshText.printTopShingleAndCount(10);
 		System.out.println("Number of tokens used more than once = "+lshText.findCountofIndexInUntrimmedForest(1));
-		assertEquals(lshText.untrimmedForestSize(), 2273);
+		int fs = lshText.untrimmedForestSize();
+		assertEquals(lshText.untrimmedForestSize(), 2270);
 		lshText.buildForest();
 		
 		int buckets[] = lshText.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 
@@ -154,6 +155,26 @@ public class LshTester {
 											KGRAM_MAX, 
 											MAX_NUMBER_OF_BUCKETS);
 		assertEquals(buckets.length, 2);
+		
+		boolean[] bVector = lshText.getVector("This movie stinks. It's boring. I've never been so disgusted in my life.", true, KGRAM_MIN, KGRAM_MAX);
+		System.out.println("boolean vector size: "+bVector.length);		
+		
+		String vector64a = lshText.getVectorAsBase64("This movie stinks. It's boring. I've never been so disgusted in my life.",
+									true,
+									KGRAM_MIN, 
+									KGRAM_MAX);
+
+		assertEquals("eAA=", vector64a);
+
+		
+		String vector64b = lshText.getVectorAsBase64("Paul is invited to Libbets' apartment in Manhattan, though upon arriving, is disappointed to learn that Francis was also invited.",
+									true,
+									KGRAM_MIN, 
+									KGRAM_MAX);
+		
+		
+		assertEquals("bQBwAL8AzQEyApsC", vector64b);
+
 	}	
 	
 	@Test
@@ -185,7 +206,8 @@ public class LshTester {
 		System.out.println("New Cleaned Forest size:"+lshText.untrimmedForestSize());
 		
 		lshText.printTopShingleAndCount(20);
-		assertEquals(lshText.untrimmedForestSize(), 59);
+		int fs = lshText.untrimmedForestSize();
+		assertEquals(fs, 64);
 		lshText.buildForest();
 		
 		int buckets[] = lshText.getBuckets("This movie stinks. It's boring. I've never been so disgusted in my life.", 

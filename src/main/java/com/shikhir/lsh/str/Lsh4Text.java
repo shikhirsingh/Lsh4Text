@@ -1,24 +1,34 @@
 package com.shikhir.lsh.str;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+
 import com.shikhir.lsh.forest.ForestShingle;
 import com.shikhir.lsh.shingling.Shingle;
 import com.shikhir.lsh.shingling.ShinglingSet;
@@ -38,6 +48,7 @@ public class Lsh4Text {
 	
 	private static final int RECOMMENDED_VECTOR_SIZE = 1000;
 
+	private int  documentInsertionCount=0;
 	private boolean removeStopWords=false;
 	private boolean removeStopCharacters=true;
 	
@@ -495,6 +506,12 @@ public class Lsh4Text {
 		return minhash.similarity(sig1, sig2);
 	}
 
+	/**
+	 * Gets the default vector size if none is provided
+	 * 
+	 * @return The default vector size 
+	 */
+	
 	private int getDefaultVector() {
 		if (this.untrimmedForestMap.size() < 800) {
 			return this.untrimmedForestMap.size() - 1;
@@ -507,6 +524,92 @@ public class Lsh4Text {
 	}
 
 	/**
+	 * Load the an trimmed forest from the exported file
+	 * 
+	 * @param importFile The CSV File to be imported 
+	 * @throws IOException 
+	 */
+	public void importForest(File importFile) throws IOException {
+		InputStream in = new FileInputStream(importFile);
+		importForest(in);
+	}
+	
+	/**
+	 * Load the an trimmed forest from the exported file
+	 * 
+	 * @param inStream The stream that contains the file 
+	 * @throws IOException 
+	 */
+	public void importForest(java.io.InputStream inStream) throws IOException {
+		InputStreamReader inR = null;
+		BufferedReader buf = null;
+		inR = new InputStreamReader(inStream);
+		buf = new BufferedReader(inR);
+
+		Iterable<CSVRecord> records = null;
+		String[] HEADERS = { "id", "token", "percentage"};
+
+		records = CSVFormat.RFC4180.withHeader(HEADERS).parse(buf);
+
+		ArrayList<Integer> csvForest = new ArrayList<Integer>();
+		for (CSVRecord record : records) {
+			Integer id = Integer.parseInt(record.get("id"));
+			csvForest.add(id);
+		}
+        Integer[] arrForest = new Integer[csvForest.size()]; 
+        arrForest = csvForest.toArray(arrForest); 
+		loadForest(arrForest);
+	}
+	
+	/**
+	 * Exports the full untrimmed forest into a CSV file. Useful for testing. 
+	 * 
+	 * @param exportedFile The file to be exported containing the id, token, and percentage 
+	 */	
+	public void exportUntrimmedForest(File exportedFile) {
+		exportUntrimmedForest(untrimmedForestMap.size(), exportedFile);
+	}
+	
+	/**
+	 * Exports the untrimmed forest into a CSV file. 
+	 * 
+	 * @param size The size of the untrimmed forest to be exported. Should be same as vector size.
+	 * @param exportedFile The file to be exported containing the id, token, and percentage 
+	 */	
+	
+	public void exportUntrimmedForest(int size, File exportedFile) {
+		if (size > untrimmedForestMap.size()) {
+			throw new IllegalArgumentException();
+		}
+
+		FileWriter out = null;
+		try {
+			out = new FileWriter(exportedFile);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		String[] HEADERS = { "id", "token", "percentage"};
+
+		try (CSVPrinter printer = new CSVPrinter(out, CSVFormat.TDF.withHeader(HEADERS))) {
+			ArrayList<ForestShingle> forest = getUntrimmedForest(true);
+
+			for (int i = 0; i < size-1; i++) {
+				ForestShingle fs = forest.get(i);
+				double d = 1.0*fs.getShingleCountInForest()/getDocumentInsertionCount()*100;
+				String percentageStr = new DecimalFormat("#.0#").format(d); // rounded to 2 decimal places
+
+				printer.printRecord(fs.getId(), fs.getToken(), percentageStr);
+			}
+
+		}
+	    catch (IOException e) { 
+	        // TODO Auto-generated catch block 
+	        e.printStackTrace(); 
+	    } 
+	}	
+	
+	/**
 	 * Builds a trimmed forest from using a untrimmed forest by removing all the
 	 * leafs that had the lowest frequency of use. The a default vector size of less
 	 * than 1200 is used.
@@ -516,6 +619,7 @@ public class Lsh4Text {
 		buildForest(getDefaultVector());
 	}
 
+		
 	/**
 	 * Builds a trimmed forest of vectorSize from using a untrimmed forest by
 	 * removing all the leafs that had the lowest frequency of use
@@ -547,9 +651,9 @@ public class Lsh4Text {
 		
 		System.gc();
 	}
-
+	
 	/**
-	 * Load the forest with provided integers
+	 * Load the forest with provided id
 	 * 
 	 * @param forestInt An array of integers that contain the forest
 	 */
@@ -591,16 +695,24 @@ public class Lsh4Text {
 
 		Shingle[] documentShingles = ShinglingSet.getTokensForMessage(document, wordTokens, minKGram, maxKGram);
 		if(documentShingles==null || documentShingles.length==0 ) return;
-
+		documentInsertionCount++;
 		for (Shingle s : documentShingles) {
 			ForestShingle fs = untrimmedForestMap.get(s.getId());
 			if (fs == null) fs = new ForestShingle(s.toString(), 0);
-
 			fs.increment();
 			untrimmedForestMap.put(fs.getId(), fs);
 		}
 	}
 
+	/**
+	 * Gets the total number of documents inserted
+	 * 
+	 * @return The size of the document 
+	 */
+
+	public int getDocumentInsertionCount() {
+		return documentInsertionCount;
+	}
 
 	/**
 	 * Creates forest from a text file by tokenizing the text file. Each line is

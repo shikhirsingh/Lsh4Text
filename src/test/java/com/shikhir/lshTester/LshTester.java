@@ -2,6 +2,7 @@ package com.shikhir.lshTester;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
@@ -64,6 +65,15 @@ public class LshTester {
 		} catch (IOException e) {
 			fail("could not find test file");
 		}
+		try {
+			File tmpFile = File.createTempFile("UntrimmedForest", ".tsv");
+			lshText1.exportUntrimmedForest(tmpFile);
+			System.out.println("Exporting Untrimmed Forest to Temp File: "+tmpFile.getAbsoluteFile());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		lshText1.buildForest();
 		
 		String base64Test = lshText1.encodeForestAsBase64();

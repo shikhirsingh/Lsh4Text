@@ -42,8 +42,6 @@ public class ForestShingle implements Comparable<ForestShingle>{
     		return that.getToken().length()-this.getToken().length();
     	}
     	return thisCount.compareTo(that.count);
-    	
-    	
     }
     
     

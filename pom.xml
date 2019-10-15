@@ -5,7 +5,7 @@
 
 	<groupId>com.shikhir</groupId>
 	<artifactId>Lsh4Text</artifactId>
-	<version>2.0.10</version>
+	<version>3.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>Lsh4Text</name>
@@ -28,7 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>		
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<scm>
 		<url>https://github.com/shikhirsingh/Lsh4Text</url>
@@ -53,6 +53,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.5</version>
+		</dependency>
+
+		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
@@ -63,7 +69,7 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.9</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.linkedin.urls</groupId>
 			<artifactId>url-detector</artifactId>
@@ -74,6 +80,11 @@
 			<groupId>me.lemire.integercompression</groupId>
 			<artifactId>JavaFastPFOR</artifactId>
 			<version>0.1.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.shikhir</groupId>
+			<artifactId>StrWrangler4j</artifactId>
+			<version>1.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -168,6 +179,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		
+
 	</build>
 </project>

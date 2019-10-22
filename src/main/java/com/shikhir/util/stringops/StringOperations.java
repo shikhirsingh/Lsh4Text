@@ -1,5 +1,7 @@
 package com.shikhir.util.stringops;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class StringOperations {
 
 	/**
@@ -35,7 +37,21 @@ public class StringOperations {
         return -1; 
     } 
 	
-	
+
+	/**
+	 * Remove stop characters from string
+	 *   
+	 * @param text The input string 
+	 * @return return stop characters
+	 * @since 1.0.0
+	 */
+
+	public static String removeStopChar(String text) {
+	    if(StringUtils.isBlank(text)) return "";
+
+		return text.replaceAll("[.?=_,【】%:*;|�!()'-]", "").replaceAll("\\s+"," ").trim();
+	}
+
 	/**
 	 * This method is used to test if the string contains characters that are from
 	 * the CJKV languages (Chinese, Japanese, Korean, or Vietnamese ).
@@ -60,4 +76,5 @@ public class StringOperations {
 		}
 		return counter;
 	}
+
 }

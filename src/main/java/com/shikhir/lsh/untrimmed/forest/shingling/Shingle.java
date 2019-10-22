@@ -1,4 +1,4 @@
-package com.shikhir.lsh.shingling;
+package com.shikhir.lsh.untrimmed.forest.shingling;
 
 import com.shikhir.hash.MurmurHash;
 
@@ -36,13 +36,22 @@ public class Shingle implements Comparable<Shingle> {
 	@Override
 	public int compareTo(Shingle that) {
 		// TODO Auto-generated method stub
-		if(that==null) throw new IllegalArgumentException();
+		if(that==null && token==null) {
+			return 0;
+		}
+		else if(that==null){
+			throw new IllegalArgumentException();
+		}
 		int val= this.getId().compareTo(that.getId());
         return val;
 	}
 
 	public String toString() {
-        return token;
+        return "Shingle [ id: "+id+", token: "+ token+ " ]";
     }
-
+	
+	public boolean equals(Shingle that) {
+		if(this.id.equals(that.getId())) return true;
+		return false;
+	}
 }

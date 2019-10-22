@@ -1,11 +1,15 @@
-package com.shikhir.lsh.forest;
+package com.shikhir.lsh.untrimmed.forest.shingling;
 
-import com.shikhir.lsh.shingling.Shingle;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ForestShingle implements Comparable<ForestShingle>{
 	Shingle shingle;
 	private int count;          // current value
 
+	
+	public ForestShingle(){
+		
+	}
     // create a new counter with the given parameters
     public ForestShingle(String token, int count) {
     	shingle = new Shingle(token);
@@ -14,13 +18,14 @@ public class ForestShingle implements Comparable<ForestShingle>{
 
     // increment the counter by 1
     public void increment() {
-        count++;
+        ++count;
     } 
 
     public String getToken() {
     	return shingle.getToken();
     }
 
+    @JsonIgnore
     public int getId() {
     	return shingle.getId();
     }
@@ -29,10 +34,11 @@ public class ForestShingle implements Comparable<ForestShingle>{
         return count;
     } 
 
-    // return a string representation of this counter
     public String toString() {
-        return shingle.getToken()+":"+shingle.getId() + ": " + count;
-    } 
+        return "ForestShingle [ shingle: "+shingle+", count: "+ count+ " ]";
+
+    }
+    
 
     // compare two Counter objects based on their count
     public int compareTo(ForestShingle that) {
@@ -43,6 +49,8 @@ public class ForestShingle implements Comparable<ForestShingle>{
     	}
     	return thisCount.compareTo(that.count);
     }
+    
+    
     
     
 }

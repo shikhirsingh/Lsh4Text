@@ -40,9 +40,12 @@ There are a number of parameters that go into a text LSH algorithm. In this impl
 * First, you will need to create a forest which contains shinglings (i.e. words) of all your documents. Do do this, you can either load a file containing the document or add a document one by one. Here is how you load of file to create an untrimmed forest. 
 
 ```
+	boolean removeStopwords = true; // removes words like "the", "and", etc
+	boolean removeStopCharacters = true; // removes characters like period, commas, semicolon etc 
+	
 	Lsh4Text lshText = new Lsh4Text();
 	try {
-		Lsh4Text lshText = new Lsh4Text(true, true); // params remove stopwords and stopcharecters 
+		Lsh4Text lshText = new Lsh4Text(removeStopwords, removeStopCharacters); // params remove stopwords and stopcharacters 
 		lshText.loadFile("test_data_movie_plots.txt", "UTF-8", true, 1, 1);
 	} catch (IOException e) {
 		fail("could not find test file");
@@ -56,7 +59,7 @@ You can also load the documents one by one
 	final int kGramMin = 3; // three is a good value to get started. Lower this if you aren't getting good results. 
 	final int kGramMax = 3; // kGramsMin and kGramsMax = 1 is also a good option
 	String document = loadStringFromSomewhere();
-	lshText.addDocumentToUntrimmedForest(document, true, kGramMin, kGramMax) {
+	lshText.addDocumentToUntrimmedForest(document, true, kGramMin, kGramMax);
 
 ```
 

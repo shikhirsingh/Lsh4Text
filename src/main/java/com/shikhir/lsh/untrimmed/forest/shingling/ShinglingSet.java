@@ -1,11 +1,16 @@
-package com.shikhir.lsh.shingling;
+package com.shikhir.lsh.untrimmed.forest.shingling;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.shikhir.util.stringops.NGramSet;
 import com.shikhir.util.stringops.StringOperations;
 
 import opennlp.tools.tokenize.SimpleTokenizer;
@@ -19,20 +24,19 @@ public class ShinglingSet{
 	public ShinglingSet(){
 	}	
 	
-	ShinglingSet(String set, boolean wordTokens, int kGramsMin, int kGramsMax){
-		addShingling(set, wordTokens, kGramsMin, kGramsMax);
+	ShinglingSet(String text, boolean wordTokens, int kGramsMin, int kGramsMax){
+		addShingling(text, wordTokens, kGramsMin, kGramsMax);
 	}
 
 	public static Shingle[] getTokensForMessage(String text, boolean wordTokens, int kGramsMin, int kGramsMax) {
 			
-		TreeSet<Shingle> localSet = new TreeSet<Shingle>();
 		text = text.trim();
 		if(text==null || text.length()==0) {
 			return new Shingle[0];
 		};
 
-        NGramModel nGramModel = new NGramModel();
-		StringList slTokens = new StringList(SimpleTokenizer.INSTANCE.tokenize(text.toLowerCase().trim()));
+        NGramSet nGramModel = new NGramSet();
+		StringList slTokens = new StringList(SimpleTokenizer.INSTANCE.tokenize(text.trim()));
 
 		if(slTokens.size()==0) return null;
 		if(!wordTokens) { // character tokens
@@ -43,10 +47,15 @@ public class ShinglingSet{
 		else {
 	        nGramModel.add(slTokens, kGramsMin, kGramsMax);
 		}
-        for (StringList ngram : nGramModel) {
+		
+		LinkedHashSet<Shingle> localSet = new LinkedHashSet<Shingle>();
+		
+		for (StringList ngram : nGramModel) {
  
 			Shingle s = new Shingle(ngram.toString());
-			localSet.add(s);        	
+			if(!localSet.contains(s)) {
+				localSet.add(s);
+			}
         }
 
 		Object[] objArray = localSet.toArray();
@@ -58,9 +67,9 @@ public class ShinglingSet{
 
 	}
 
-	public void addShingling(String shingling, boolean wordTokens, int kGramsMin, int kGramsMax) {
+	public void addShingling(String text, boolean wordTokens, int kGramsMin, int kGramsMax) {
 		
-		Shingle[] shingleArray = getTokensForMessage(shingling, wordTokens, kGramsMin, kGramsMax);
+		Shingle[] shingleArray = getTokensForMessage(text, wordTokens, kGramsMin, kGramsMax);
 		
 		for(Shingle s : shingleArray) {
 			shinglingSet.put(s.getId(), s);
@@ -73,12 +82,12 @@ public class ShinglingSet{
 	public boolean contains(Integer id){
 		return shinglingSet.containsKey(id);
 	}
-
+	
 	public Integer[] getAllId() {
-		
 		Set<Integer> allIdSet = shinglingSet.keySet();
 		
         Integer[] arr = Arrays.copyOf(allIdSet.toArray(), allIdSet.size(), Integer[].class); 
+        Arrays.sort(arr);
 
 		return arr;
 	}

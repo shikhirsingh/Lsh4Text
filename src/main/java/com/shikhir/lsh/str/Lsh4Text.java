@@ -162,15 +162,20 @@ public class Lsh4Text {
 	/**
 	 * Builds a trimmed forest of vectorSize from using a untrimmed forest by
 	 * removing all the leafs that had the lowest frequency of use
+	 * 
+ 	 * @return size of forest built
 	 */
 
-	public void buildForest() {
+	public int buildForest() {
 		if(cutoff>0) {
-			int cutoffIndex = getUntrimmedForest().findCountofIndexInUntrimmedForest(1);
+			int cutoffIndex = getUntrimmedForest().findCountofIndexInUntrimmedForest(cutoff);
 			buildForest(cutoffIndex);
+			return cutoffIndex;
 		}
 		else {
+			int size= untrimmedForest.getDefaultVector();
 			trimmedForest = untrimmedForest.buildForest();
+			return size;
 		}
 	}
 

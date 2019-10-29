@@ -74,7 +74,7 @@ public class TForest {
 		document = isCaseSensitive()?document:document.toLowerCase();
 		if(removeStopWords) document = Stopwords.removeStopWords(document);
 
-		return ShinglingSet.getTokensForMessage(document, wordTokens, minKGrams, minKGrams);	
+		return ShinglingSet.getTokensForMessage(document, wordTokens, minKGrams, maxKGrams);	
 	}	
 	
 	/**
@@ -221,20 +221,9 @@ public class TForest {
 		document = normalize?Normalize.all(document):document;
 		
 		if(removeStopWords) document = Stopwords.removeStopWords(document);
-
-		ShinglingSet set = new ShinglingSet();
-		set.addShingling(document, wordTokens, minKGram, maxKGram);
-
-		Integer[] idsArry = set.getAllId();
-
-		int found=0;
-		for(Integer id: idsArry) {
-			Integer location = trimmedForest.get(id).getLocation();
-			if(location!=null) {
-				found++;
-			}
-		}
-		return found;
+		
+		Sentence sentence = getSentence(document, wordTokens, minKGram, maxKGram);
+		return sentence.getDictionaryLocation().size();
 	}
 	
 

@@ -251,7 +251,7 @@ public class UntrimmedForest {
 	 * @return The default vector size 
 	 */
 	
-	private int getDefaultVector() {
+	public int getDefaultVector() {
 		if (this.untrimmedForestMap.size() < 800) {
 			return this.untrimmedForestMap.size() - 1;
 		}

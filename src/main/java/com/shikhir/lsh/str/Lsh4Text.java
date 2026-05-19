@@ -25,6 +25,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
+/**
+ * High-level facade for building and querying text LSH structures.
+ *
+ * Typical usage: ingest corpus, build trimmed forest, then generate
+ * vectors/signatures/buckets.
+ */
 public class Lsh4Text {
 
 	private UntrimmedForest untrimmedForest = new UntrimmedForest();
@@ -46,10 +52,10 @@ public class Lsh4Text {
 	}
 
 	/**
-	 * Returns the Jaccard Similarity of two different vectors
-	 * 
-	 * @param removeStopWords Removes stop words while creating a vector or inputting into forest
- 	 * @param removeStopCharacters Removes stop characters (like quotations, colons, etc) while creating a vector or inputting into forest
+	 * Creates an LSH instance with configurable preprocessing.
+	 *
+	 * @param removeStopWords removes stop words while ingesting/querying text
+ 	 * @param removeStopCharacters removes punctuation-like stop characters while ingesting/querying text
 	 */
 	public Lsh4Text(boolean removeStopWords, boolean removeStopCharacters) {
 		this.removeStopWords = removeStopWords;
@@ -62,11 +68,11 @@ public class Lsh4Text {
 	}
 
 	/**
-	 * Returns the Jaccard Similarity of two different vectors
-	 * 
-	 * @param removeStopWords Removes stop words while creating a vector or inputting into forest
- 	 * @param removeStopCharacters Removes stop characters (like quotations, colons, etc) while creating a vector or inputting into forest
- 	 * @param caseSensitive should the forest be case sensitive
+	 * Creates an LSH instance with configurable preprocessing and case handling.
+	 *
+	 * @param removeStopWords removes stop words while ingesting/querying text
+ 	 * @param removeStopCharacters removes punctuation-like stop characters while ingesting/querying text
+ 	 * @param caseSensitive whether tokenization and lookup should preserve case
 	 */
 	public Lsh4Text(boolean removeStopWords, boolean removeStopCharacters, boolean caseSensitive) {
 		this.removeStopWords = removeStopWords;
@@ -168,12 +174,16 @@ public class Lsh4Text {
 
 	public int buildForest() {
 		if(cutoff>0) {
+			// Convert "frequency cutoff" into a concrete vector size index.
 			int cutoffIndex = getUntrimmedForest().findCountofIndexInUntrimmedForest(cutoff);
+			// Build the trimmed forest using the derived vector size.
 			buildForest(cutoffIndex);
 			return cutoffIndex;
 		}
 		else {
+			// Keep the inferred size for callers who want visibility into configuration.
 			int size= untrimmedForest.getDefaultVector();
+			// Build trimmed forest using internal default strategy.
 			trimmedForest = untrimmedForest.buildForest();
 			return size;
 		}
@@ -215,12 +225,12 @@ public class Lsh4Text {
 	}
 	
 	/**
-	 * By default, the digits are normalized to increase the the chances of collision for signature.
-	 * You can turn this off.
-	 * 
-	 * @param normalize The text of the document for which the boolean vector is
-	 *                 being created
-	 *                 
+	 * Enables or disables text normalization before shingling.
+	 *
+	 * Normalization improves collision likelihood for semantically similar text variants
+	 * (for example text containing different digit forms).
+	 *
+	 * @param normalize true to normalize text before tokenization, false otherwise
 	 */
 	public void setNormalize(boolean normalize) {
 		this.normalize = normalize;
@@ -287,6 +297,7 @@ public class Lsh4Text {
 	 * @param kGramsMin The minimum number of k-Grams used
 	 * @param kGramsMax The maximum number of k-Grams used
 	 * @return The size of the forest
+	 * @throws IOException if the file cannot be read
 	 */
 	public int loadFile(String fileName, String encoding, boolean wordTokens, int kGramsMin, int kGramsMax) throws IOException {
 	    if(StringUtils.isBlank(fileName)) throw new IllegalArgumentException("fileName parameter cannot be empty or null");
@@ -294,12 +305,16 @@ public class Lsh4Text {
 		File tldlist = FileUtils.getFile(fileName);
 
 		try {
+			// Iterate line-by-line to avoid loading the entire file into memory at once.
 			LineIterator it = FileUtils.lineIterator(tldlist, encoding);
 
 			while (it.hasNext()) {
+				// Basic cleanup: remove wrapping quotes and surrounding whitespace.
 				String text = it.nextLine().replace("\"", "").trim();
 
+				// Ignore very short/noisy lines that are unlikely to be useful as documents.
 				if(text.length()<3) continue;
+				// Each line is treated as one document in the untrimmed forest.
 				untrimmedForest.addDocument(text, wordTokens, kGramsMin, kGramsMax);
 			}
 			it.close();
@@ -335,12 +350,19 @@ public class Lsh4Text {
         }
 	}
 	
+	/**
+	 * Imports a trimmed forest from a JSON input stream.
+	 *
+	 * @param inStream input stream containing a JSON-serialized {@link TForest}
+	 * @throws IOException if the stream cannot be read or JSON cannot be parsed
+	 */
 	public void importTrimmedForest(InputStream inStream) throws IOException {
 		InputStreamReader inR = null;
 		BufferedReader buf = null;
 		inR = new InputStreamReader(inStream);
 		buf = new BufferedReader(inR);
 
+		// Read full stream into a string, then deserialize with Jackson.
 		String line = buf.readLine(); 
 		StringBuilder sb = new StringBuilder(); 
 		while(line != null){ 
@@ -352,18 +374,31 @@ public class Lsh4Text {
 		trimmedForest = new ObjectMapper().readValue(json, TForest.class);
 	}
 	
+	/**
+	 * Imports a trimmed forest from a JSON file.
+	 *
+	 * @param file JSON file previously generated by {@link #exportTrimmedForest(File)}
+	 * @throws IOException if file IO or JSON deserialization fails
+	 */
 	public void importTrimmedForest(File file) throws IOException {
 		FileInputStream fis = null;
 		fis = new FileInputStream(file);
 		importTrimmedForest(fis);
 	}
 	
+	/**
+	 * Imports an untrimmed forest from a JSON input stream.
+	 *
+	 * @param inStream input stream containing a JSON-serialized {@link UntrimmedForest}
+	 * @throws IOException if the stream cannot be read or JSON cannot be parsed
+	 */
 	public void importUntrimmedForest(InputStream inStream) throws IOException {
 		InputStreamReader inR = null;
 		BufferedReader buf = null;
 		inR = new InputStreamReader(inStream);
 		buf = new BufferedReader(inR);
 
+		// Read stream content and deserialize into the in-memory untrimmed forest.
 		String line = buf.readLine(); 
 		StringBuilder sb = new StringBuilder(); 
 		while(line != null){ 
@@ -375,6 +410,12 @@ public class Lsh4Text {
 		untrimmedForest = new ObjectMapper().readValue(json, UntrimmedForest.class);
 	}
 
+	/**
+	 * Imports an untrimmed forest from a JSON file.
+	 *
+	 * @param file JSON file previously generated by {@link #exportUntrimmedForest(File)}
+	 * @throws IOException if file IO or JSON deserialization fails
+	 */
 	public void importUntrimmedForest(File file) throws IOException {
 		FileInputStream fis = null;
 		fis = new FileInputStream(file);

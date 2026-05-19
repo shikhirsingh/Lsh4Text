@@ -1,136 +1,252 @@
-# Lsh4Text - A Java Implementation of the Locality Sensitive Hashing(LSH) algorithm; Find similar text documents fast
+# Lsh4Text - A Java implementation of Locality Sensitive Hashing (LSH) for text
 
-This library makes is simple to use [LSH](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) (Locality sensitive hashing) for finding similar text documents very quickly. [Locality Sensitive Hashing](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4) is a probabilistic algorithm which is used find similar documents without checking each documents one by one to determine if they are similar. 
+Lsh4Text is a Java library for **fast approximate text similarity search** using LSH + MinHash.
+This README is written for people who are **not** LSH experts and want a practical way to get started.
 
+If you are new to LSH, these references are helpful:
 
-**Author**
+- Brainly engineering blog: [Locality Sensitive Hashing explained](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4)
+- Stanford MMDS chapter: [Finding Similar Items (Chapter 3)](http://infolab.stanford.edu/~ullman/mmds/ch3a.pdf)
+- MMDS book homepage: [Mining of Massive Datasets](http://infolab.stanford.edu/~ullman/mmds.html)
 
-* Shikhir Singh
+## Author
 
-**Dependencies**
+- Shikhir Singh
 
-* Java 8+ 
+## Dependencies
 
-**How to Install**
+- Java 8+
+- Maven
 
-Maven - be sure to check for latest version in Maven:
+## Installation
 
-```
+```xml
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>2.0.6</version>
+  <version>3.0.7</version>
 </dependency>
 ```
 
-**How LSH Works**
+---
 
-LSH belongs to a class of probabilistic algorithms (meaning, you trade accuracy for speed). In it's simplest form, LSH works by grouping all of your documents (or the document's signature) into n buckets. Each document (or it's signature) needs to be stored in multiple buckets. When you are looking for a document that could be similar, you check each of the buckets LSH asks you to check. The advantage of using LSH is that you don't need to search the entire dataset one by one, just the buckets. Because you only need to search a small number of buckets, it can significantly reduces the size and dimension of the problem. For a more detailed explanation please see [this chapter](http://infolab.stanford.edu/~ullman/mmds/ch3a.pdf) from [Mining Massive Datasets](http://infolab.stanford.edu/~ullman/mmds.html) book. Another explanation is provided in [this blog](https://medium.com/engineering-brainly/locality-sensitive-hashing-explained-304eb39291e4). 
+## What problem does LSH solve?
 
-**Parameters You Will Want to Change**
-There are a number of parameters that go into a text LSH algorithm. In this implementation of LSH, some of these are auto computed for you. You will want to try different numbers based on your dataset. I encourage you to try different numbers. 
+A naive similarity system compares every document against every other document.
+That quickly becomes too expensive as your corpus grows.
 
-* Bucket Size - How many different buckets that exist
-* Number of Possible Buckets for each document (i.e Bands)
-* Vector Size - Number of unique kgrams - 
-* K-Shingles or kGram size - the minimum and maximum number of k-grams
+**LSH belongs to a class of probabilistic algorithms** (you trade some accuracy for speed).
+In simple terms:
 
-**Just get me started ASAP!**
+1. Convert each document into a representation (vector/signature).
+2. Hash that representation into multiple buckets.
+3. At query time, only inspect documents in matching buckets.
 
-* First, you will need to create a forest which contains shinglings (i.e. words) of all your documents. Do do this, you can either load a file containing the document or add a document one by one. Here is how you load of file to create an untrimmed forest. 
+This drastically reduces candidate comparisons because you search a much smaller subset of the corpus first.
 
-```
-	boolean removeStopwords = true; // removes words like "the", "and", etc
-	boolean removeStopCharacters = true; // removes characters like period, commas, semicolon etc 
-	
-	Lsh4Text lshText = new Lsh4Text();
-	try {
-		Lsh4Text lshText = new Lsh4Text(removeStopwords, removeStopCharacters); // params remove stopwords and stopcharacters 
-		lshText.loadFile("test_data_movie_plots.txt", "UTF-8", true, 1, 1);
-	} catch (IOException e) {
-		fail("could not find test file");
-	}
-```
-This command above creates an untrimmed forest from a file. The loadFile assumes that each line of the text file is it's own document. 
+In short:
 
-You can also load the documents one by one 
+- Without LSH: compare query with almost everything.
+- With LSH: compare query with a much smaller candidate set first.
 
-```
-	final int kGramMin = 3; // three is a good value to get started. Lower this if you aren't getting good results. 
-	final int kGramMax = 3; // kGramsMin and kGramsMax = 1 is also a good option
-	String document = loadStringFromSomewhere();
-	lshText.addDocumentToUntrimmedForest(document, true, kGramMin, kGramMax);
+---
 
-```
+## How Lsh4Text is structured
 
-* After the untrimmed forest is built, you will need to trim the forest. An untrimmed forest contains all the shinglings(words) from all the documents, which is too huge. In order to trim a forest, you will need to look at the frequency counts of the shinglings. You can do this using the Lsh4Text.findCountofIndexInUntrimmedForest(FREQUENCY_COUNT) function. Alternatively, you can just use the default values. The Lsh4Text.buildForest method without any params will guess at default values. WARNING: the default values will not be sufficient if you have a huge number of documents. Do your homework here. 
+Lsh4Text uses a two-phase approach:
 
-```
-	lshText.buildForest() // pass a value larger than 1200 for higher accuracy and more memory usage
-```
+1. **Untrimmed forest**: ingest documents and collect token frequencies.
+2. **Trimmed forest**: keep a selected subset of tokens and assign fixed positions in a boolean vector.
 
-* After your forest is built, you will need to put all your documents(and/or their signatures and vectors) into buckets. Because a document signature is typically smaller than the full document, it's often faster put the signatures into a bucket and check for signature similarity. Sometimes, signatures of the documents are too big. Can you control the size of the signature by adjusting the similarityError parameter. If you store the vectors of each document in the bucket, you could also check the vectors for similarity. If your documents are huge, this could be much quicker. 
+Typical production flow:
 
-```
-	final int NUMBER_OF_BUCKETS=2;
-	
-	for(String document: allDocuments){
-		int buckets[] = lshText.getBuckets(document, true, kGramMin, kGramMax, NUMBER_OF_BUCKETS);
-		for(int eachBucket: buckets){
-			int[] signature = lshText.getMinHashSignature(document, true, kGramMin, kGramMax, similarityError);
-			
-			// Add all document and/or document signature into each of the buckets
-			// The same document will go into multiple buckets
-			// You will probably be doing this is a key/value database
-			
-			// mydatabase.insert(eachBucket, signature, document, documentVector);
-		}
-	}
-```
+1. Ingest your training corpus.
+2. Build a trimmed forest (dictionary/vector space).
+3. For each stored document, compute buckets + signature and index them.
+4. For each query, compute query buckets + signature, fetch candidates, then run stronger similarity checks.
 
-* In order to find a document, you will need get all of it's possible buckets (via the Lsh4Text.getBuckets method) and then search each bucket one by one for a signature similarity, vector similarity, or document similarity. Good ways to check for document similarity are Jaccard Similarity, Cosine Similarity, or Levenshtein Distance. 
+### Vocabulary used in this project (plain language)
 
-```
-	String documentToSearch = "This movie is super slow and boring.";
-	int[] docToSearchSignature = lshText.getMinHashSignature(documentToSearch, true, kGramMin, kGramMax, similarityError);
-	
-	int possible_buckets[] = lshText.getBuckets(documentToSearch, true, kGramMin, kGramMax, NUMBER_OF_BUCKETS););
+- **Document**: one input text.
+- **Token / shingle**: a small piece of text (word-based or character-based).
+- **Vector**: a boolean array; each position represents whether a token from the trimmed forest is present.
+- **Signature**: a compact MinHash representation of the vector.
+- **Bucket**: a hash-based partition used to quickly find likely candidates.
 
-	for(int searchBucket: possible_buckets){
-		// get a list of signatures each representing a document in the bucket
-		// do a jacarrd similarity for each signature against docToSearchSignature
-		// if there is a possible match, do a jacarrd similarity for the vectors
-		// if there is a match, do a similarity test on the documents
-	}
-```
+---
 
-* A vector can also be used as a signature in a pitch to avoid the searching many buckets although the accuracy is very poor (1 bucket). 
+## Parameters you should tune
 
-```
-	String base64signatureOfDocument = lshText.getVectorAsBase64(document, false, kGramMin, kGramMax); // 
-```
+Text LSH quality depends on dataset-specific tuning. Important knobs:
 
-* LSH4Text takes up a lot of memory due to the size of the forest. Close it when you are done to avoid out of memory errors. 
+- **Bucket size**: number of distinct bucket IDs in your LSH space.
+- **Number of stages/bands**: how many bucket keys each document receives.
+- **Vector size**: number of shingles retained in the trimmed forest.
+- **k-shingles / k-grams (`minKGram`, `maxKGram`)**: shingle lengths.
+- **`wordTokens`**:
+  - `true` for word shingles (common for natural language).
+  - `false` for character shingles (helpful for noisy/short text).
+- **`similarityError`**: MinHash approximation tradeoff.
 
-```
-	lsh.close()
+There is no universal best setting—test with your own corpus and quality targets.
+
+Good starting points for many text datasets:
+
+- `wordTokens = true`
+- `minKGram = 2`, `maxKGram = 3` (or `3,3` for stricter matching)
+- `stages = 2` to `4`
+- `similarityError = 0.05`
+
+---
+
+## Quick start (step-by-step)
+
+## 1) Create and configure
+
+```java
+boolean removeStopWords = true;         // removes words like "the", "and", etc.
+boolean removeStopCharacters = true;    // removes punctuation-like stop characters
+boolean caseSensitive = false;
+
+Lsh4Text lshText = new Lsh4Text(removeStopWords, removeStopCharacters, caseSensitive);
+
+// Optional: normalize text (e.g., digit-like patterns) before shingling
+lshText.setNormalize(true);
 ```
 
-**LICENSE**
-* Apache 2.0
+## 2) Build the untrimmed forest from your corpus
 
-**Version History**
+### Option A: load from file
 
-* 1.0.0 - Initial Release
-* 1.0.1 - Small fixes
-* 2.0.0 - Major Updates to support multiple LSH instances
-* 2.0.1 - Lsh4Text.clearnUntrimmedForest() added
-* 2.0.3 - Bug fixes
-* 2.0.4 - Made remove stop characters optional via constructor
-* 2.0.5 - Added Normalization to increase collision of hash
-* 2.0.6 - Small bug fixes; better README; new dependency on java 1.8
+Each line is treated as one document:
 
+```java
+lshText.loadFile("test_data_movie_plots.txt", "UTF-8", true, 1, 1);
+```
 
-**Roadmap Features**
+### Option B: add documents incrementally
 
-* New optional methods to shrink size of untrimmed forest by removing leaves/tokens that have the same jaccard similarity of documents ids
+```java
+final int kGramMin = 3;
+final int kGramMax = 3;
+boolean wordTokens = true;
+
+for (String document : allDocuments) {
+    lshText.addDocument(document, wordTokens, kGramMin, kGramMax);
+}
+```
+
+## 3) Build the trimmed forest
+
+The untrimmed forest may be very large. Build a trimmed forest to define vector space:
+
+```java
+int inferredVectorSize = lshText.buildForest();
+```
+
+Or explicitly choose vector size:
+
+```java
+lshText.buildForest(1500);
+```
+
+Tip: Larger vector sizes generally improve discrimination but increase memory usage.
+If you are unsure, start small and increase gradually while evaluating precision/recall.
+
+## 4) Index your stored documents into LSH buckets
+
+```java
+final int STAGES = 2;
+final double similarityError = 0.05;
+
+for (String document : allDocuments) {
+    int[] buckets = lshText.getBuckets(document, true, 3, 3, STAGES);
+    int[] signature = lshText.getMinHashSignature(document, true, 3, 3, similarityError);
+    boolean[] vector = lshText.getVector(document, true, 3, 3);
+
+    for (int bucket : buckets) {
+        // Store in your DB/index:
+        // key: bucket
+        // value: document ID + signature (+ optional vector/text)
+    }
+}
+```
+
+Why signature first? Signatures are usually much smaller than full text and often faster for candidate filtering.
+This helps keep query-time candidate scoring cheap.
+
+## 5) Query for similar documents
+
+```java
+String query = "This movie is super slow and boring.";
+
+int[] queryBuckets = lshText.getBuckets(query, true, 3, 3, 2);
+int[] querySignature = lshText.getMinHashSignature(query, true, 3, 3, 0.05);
+
+for (int bucket : queryBuckets) {
+    // Fetch candidate docs/signatures from this bucket
+    // 1) Compute signature similarity first
+    // 2) Optionally compare vectors
+    // 3) Run stronger text-level similarity on finalists
+}
+```
+
+Recommended stronger checks for re-ranking/verification:
+
+- Jaccard similarity
+- Cosine similarity
+- Levenshtein similarity/distance
+
+### End-to-end process summary (copy/paste checklist)
+
+1. Create `Lsh4Text` with preprocessing settings.
+2. Add training documents (`loadFile` or `addDocument` loop).
+3. Build trimmed forest (`buildForest`).
+4. For each stored document: compute buckets + signature, store with doc ID.
+5. For each query: compute query buckets + signature, fetch candidates.
+6. Use `signatureSimilarity` first, then stronger similarity for finalists.
+
+---
+
+## Persistence (save/load forests)
+
+You can export/import forests as JSON:
+
+- `exportUntrimmedForest(File)` / `importUntrimmedForest(...)`
+- `exportTrimmedForest(File)` / `importTrimmedForest(...)`
+
+This is useful when you want to train once and reuse forests across service restarts.
+It also helps separate offline training from online query serving.
+
+---
+
+## Memory notes
+
+Large corpora can consume significant memory because forest structures keep many shingles.
+When done, release resources:
+
+```java
+lshText.close();
+```
+
+---
+
+## License
+
+- Apache 2.0
+
+## Version history
+
+- 1.0.0 - Initial Release
+- 1.0.1 - Small fixes
+- 2.0.0 - Major updates to support multiple LSH instances
+- 2.0.1 - `Lsh4Text.cleanUntrimmedForest()` added
+- 2.0.3 - Bug fixes
+- 2.0.4 - Made remove-stop-characters optional via constructor
+- 2.0.5 - Added normalization to increase hash collision for similar text
+- 2.0.6 - Small bug fixes; better README; Java 8 dependency
+- 3.0.7 - Documentation and JavaDoc improvements; README onboarding updates
+
+## Roadmap features
+
+- Optional methods to shrink untrimmed forest by removing leaves/tokens that have similar document-id overlap behavior.

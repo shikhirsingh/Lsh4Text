@@ -9,12 +9,12 @@ public class Stopwords {
 	public static Set<String> stopWordSet = new HashSet<String>(Arrays.asList(stopwords));
 	
 	/**
-	 * Is this word in the Stop word dictionary
-	 *   
-	 * @param word word to seek in the stop word dictionary
-	 * @return returns true if found; false if not found 
-	 * @since 1.0.0
-	 */
+	 * Checks whether a word is considered a stop word.
+	 *
+	 * @param word word to check against the stop word set
+	 * @return true if the input is treated as a stop word; false otherwise
+	 * @since 1.0.0
+	 */
 	public static boolean isStopword(String word) {
 		if(word.length() < 2) return true;
 		if(word.charAt(0) >= '0' && word.charAt(0) <= '9') return true; //remove numbers, "25th", etc
@@ -23,12 +23,12 @@ public class Stopwords {
 	}
 	
 	/**
-	 * Removes all Stop words from a string
-	 *   
-	 * @param text The string that contains stop words that need to be removed
-	 * @return The value passed in minus all the stop words 
-	 * @since 1.0.0
-	 */
+	 * Removes stop words from a text string.
+	 *
+	 * @param text input text that may contain stop words
+	 * @return input text with stop words removed
+	 * @since 1.0.0
+	 */
 
 	public static String removeStopWords(String text) {
 		String result = "";

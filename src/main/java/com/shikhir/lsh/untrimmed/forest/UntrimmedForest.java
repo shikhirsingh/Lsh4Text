@@ -140,6 +140,7 @@ public class UntrimmedForest {
 	/**
 	 * Returns untrimmed forest as an ArrayList
 	 * 
+	 * @param decending true to sort by descending token frequency, false for ascending
 	 * @return Returns the full untrimmed forest.
 	 */
 	public ArrayList<ForestShingle> getUntrimmedForest(boolean decending) {
@@ -269,6 +270,7 @@ public class UntrimmedForest {
 	 * removing all the leafs that had the lowest frequency of use
 	 * 
 	 * @param vectorSize The size of the vector used to build the forest
+	 * @return A trimmed forest built from the highest-frequency shingles.
 	 */
 	
 	public TForest buildForest(int vectorSize) {
@@ -307,6 +309,7 @@ public class UntrimmedForest {
 	 * leafs that had the lowest frequency of use. The a default vector size of less
 	 * than 1200 is used.
 	 * 
+	 * @return A trimmed forest built using the default vector size heuristic.
 	 */
 	
 	public TForest buildForest() {
@@ -317,6 +320,8 @@ public class UntrimmedForest {
 	 * This will build a forest using all the shinglings. This should only be used
 	 * if the size of the forest is small (less than 1000) or there is very little
 	 * redunancy.
+	 *
+	 * @return A trimmed forest that includes all shingles from the untrimmed forest.
 	 */
 	
 	public TForest buildFullForest() {

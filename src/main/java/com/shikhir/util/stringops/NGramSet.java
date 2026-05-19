@@ -27,7 +27,7 @@ public class NGramSet implements Iterable<StringList> {
   /**
    * Adds one NGram, if it already exists the count increase by one.
    *
-   * @param ngram
+   * @param ngram n-gram token list to add to this set
    */
   public void add(StringList ngram) {
       mNGrams.add(ngram);
@@ -69,9 +69,9 @@ public class NGramSet implements Iterable<StringList> {
   /**
    * Adds character NGrams to the current instance.
    *
-   * @param chars
-   * @param minLength
-   * @param maxLength
+   * @param chars input text used for character n-gram generation
+   * @param minLength minimum character n-gram length to generate
+   * @param maxLength maximum character n-gram length to generate
    */
   public void add(CharSequence chars, int minLength, int maxLength) {
 
@@ -90,7 +90,7 @@ public class NGramSet implements Iterable<StringList> {
   /**
    * Removes the specified tokens form the NGram model, they are just dropped.
    *
-   * @param tokens
+   * @param tokens token sequence to remove
    */
   public void remove(StringList tokens) {
     mNGrams.remove(tokens);
@@ -99,7 +99,7 @@ public class NGramSet implements Iterable<StringList> {
   /**
    * Checks fit he given tokens are contained by the current instance.
    *
-   * @param tokens
+   * @param tokens token sequence to look up
    *
    * @return true if the ngram is contained
    */

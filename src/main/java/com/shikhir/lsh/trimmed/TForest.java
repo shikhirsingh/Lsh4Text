@@ -99,6 +99,9 @@ public class TForest {
 	 * @param wordTokens if true, tokens of words are assumed, otherwise characters
  	 * @param minKGrams minimum size of shingling
 	 * @param maxKGrams maximum size of shingling
+	 * @param removeStopCharacters if true, punctuation-like stop characters are removed
+	 * @param normalize if true, text normalization is applied before tokenization
+	 * @param removeStopWords if true, stop words are removed before tokenization
 	 *                 
 	 * @return The vector for the string
 	 */

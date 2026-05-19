@@ -28,7 +28,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * High-level facade for building and querying text LSH structures.
  *
- * Typical usage: ingest corpus -> build trimmed forest -> generate vectors/signatures/buckets.
+ * Typical usage: ingest corpus, build trimmed forest, then generate
+ * vectors/signatures/buckets.
  */
 public class Lsh4Text {
 
@@ -296,6 +297,7 @@ public class Lsh4Text {
 	 * @param kGramsMin The minimum number of k-Grams used
 	 * @param kGramsMax The maximum number of k-Grams used
 	 * @return The size of the forest
+	 * @throws IOException if the file cannot be read
 	 */
 	public int loadFile(String fileName, String encoding, boolean wordTokens, int kGramsMin, int kGramsMax) throws IOException {
 	    if(StringUtils.isBlank(fileName)) throw new IllegalArgumentException("fileName parameter cannot be empty or null");

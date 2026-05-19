@@ -18,6 +18,12 @@ import com.shikhir.util.stringops.normalize.Normalize;
 import info.debatty.java.lsh.LSHMinHash;
 import info.debatty.java.lsh.MinHash;
 
+/**
+ * Represents the trimmed (vectorized) forest used at query time.
+ *
+ * The trimmed forest maps shingle IDs to stable vector locations and supports
+ * vector generation, MinHash signatures, and LSH bucket generation.
+ */
 public class TForest {
 
 	TreeMap<Integer, TShingleProperties> trimmedForest = new TreeMap<Integer, TShingleProperties>();
@@ -40,20 +46,25 @@ public class TForest {
 	}
 
 	public Sentence getSentence(String document, boolean wordTokens, int minKGrams, int maxKGrams) {
+		// Convert the raw document into normalized shingles/tokens.
 		Shingle[] shinglingArr = getShingleArr(document, wordTokens, minKGrams, maxKGrams, removeStopCharacters, normalize, removeStopWords, caseSensitive);
 		float percentage = 1.0f;
 		ArrayList<Integer> locationAL = new ArrayList<Integer>();
 		ArrayList<Integer> idAL = new ArrayList<Integer>();
 
 		for(Shingle iTkn: shinglingArr) {
+			// Keep original token ID sequence for debugging/inspection.
 			idAL.add(iTkn.getId());
 			TShingleProperties prop = trimmedForest.get(iTkn.getId());
 			if(prop==null) {
+				// Token not present in trimmed dictionary; skip it.
 				continue;
 			}
 			else {
+				// Map token ID to fixed vector location in trimmed forest.
 				int location = trimmedForest.get(iTkn.getId()).getLocation();
 				locationAL.add(location);
+				// Multiply by token percentage to create a lightweight sentence score.
 				float tknPercentage = trimmedForest.get(iTkn.getId()).getPercentage();
 				percentage = percentage*tknPercentage;
 			}
@@ -95,14 +106,17 @@ public class TForest {
 	public boolean[] getVector(String document, boolean wordTokens, int minKGrams, int maxKGrams, 
 							   boolean removeStopCharacters, boolean normalize, boolean removeStopWords) {
 
+		// Tokenize and normalize according to the selected preprocessing pipeline.
 		Shingle[] shinglingArr = getShingleArr(document, wordTokens, minKGrams, maxKGrams, removeStopCharacters, normalize, removeStopWords, caseSensitive);
 		
+		// Vector length equals the number of retained shingles in trimmed forest.
 		int forestSize = this.trimmedForest.size();
 		boolean[] vector = new boolean[forestSize];
 
 		for(Shingle s: shinglingArr) {
 			TShingleProperties index = trimmedForest.get(s.getId());
 			if(index!=null) {
+				// Mark presence of this shingle in the fixed vector space.
 				vector[index.getLocation()]=true;
 			}
 		}		
@@ -121,6 +135,7 @@ public class TForest {
         for (Map.Entry<Integer,TShingleProperties> entry : trimmedForest.entrySet()) {
         	Integer key = entry.getKey();
         	TShingleProperties prop = entry.getValue();
+        	// Assign stable ordinal location used by boolean vectors.
         	prop.setLocation(i);
         	trimmedForest.put(key, prop);
         	i++;
@@ -174,7 +189,7 @@ public class TForest {
 	
 
 	/**
-	 * The a bucket size is automatically estimated if not provided in the
+	 * A bucket size is automatically estimated if not provided in the
 	 * getBuckets() function. This function estimates a bucket size.
 	 * 
 	 * @return returns the default bucket size based on the size of the forest()

@@ -46,8 +46,8 @@ public class Sentence {
 	
 	public String getDictionaryLocationInBase64() {
 		int[] ints = getDictionaryLocationAsIntArray();
-	    ByteBuffer buf = ByteBuffer.allocate(ints.length);
-	    IntStream.of(ints).forEach(i -> buf.put((byte)i));
+	    ByteBuffer buf = ByteBuffer.allocate(ints.length * Integer.BYTES);
+	    IntStream.of(ints).forEach(buf::putInt);
 	    return Base64.getEncoder().encodeToString(buf.array());
 	}
 

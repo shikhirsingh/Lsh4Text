@@ -24,7 +24,7 @@ If you are new to LSH, these references are helpful:
 <dependency>
   <groupId>com.shikhir</groupId>
   <artifactId>Lsh4Text</artifactId>
-  <version>3.0.7</version>
+  <version>3.0.8</version>
 </dependency>
 ```
 
@@ -245,6 +245,7 @@ lshText.close();
 - 2.0.4 - Made remove-stop-characters optional via constructor
 - 2.0.5 - Added normalization to increase hash collision for similar text
 - 2.0.6 - Small bug fixes; better README; Java 8 dependency
+- 3.0.8 - Java 21 baseline, dependency upgrades, expanded unit tests, and encoding fix improvements
 - 3.0.7 - Documentation and JavaDoc improvements; README onboarding updates
 
 ## Roadmap features
